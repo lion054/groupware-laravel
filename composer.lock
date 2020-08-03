@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "097f32389c48226a03492809530c9e8c",
+    "content-hash": "5c2f5089ad7294b09cfc0ff0a8e5f72f",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -465,6 +465,55 @@
                 "laravel"
             ],
             "time": "2020-05-31T07:30:16+00:00"
+        },
+        {
+            "name": "heydavid713/neo4jphp",
+            "version": "0.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/heydavid713/neo4jphp.git",
+                "reference": "30962925fb160a0efd7a021e4e5d0581404fac16"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/heydavid713/neo4jphp/zipball/30962925fb160a0efd7a021e4e5d0581404fac16",
+                "reference": "30962925fb160a0efd7a021e4e5d0581404fac16",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phing/phing": "2.6.*",
+                "phpunit/phpunit": "3.7.*",
+                "squizlabs/php_codesniffer": "1.5.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Everyman\\Neo4j": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Josh Adell",
+                    "email": "josh.adell@gmail.com",
+                    "homepage": "http://joshadell.com"
+                }
+            ],
+            "description": "Wrapper for the Neo4j graph database REST interface",
+            "homepage": "http://github.com/jadell/neo4jphp/wiki",
+            "keywords": [
+                "database",
+                "graph",
+                "neo4j"
+            ],
+            "time": "2015-12-30T15:32:55+00:00"
         },
         {
             "name": "laravel/framework",

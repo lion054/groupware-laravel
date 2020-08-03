@@ -9,4 +9,5 @@ return array(
     'Mockery' => array($vendorDir . '/mockery/mockery/library'),
     'Highlight\\' => array($vendorDir . '/scrivo/highlight.php'),
     'HighlightUtilities\\' => array($vendorDir . '/scrivo/highlight.php'),
+    'Everyman\\Neo4j' => array($vendorDir . '/heydavid713/neo4jphp/lib'),
 );
