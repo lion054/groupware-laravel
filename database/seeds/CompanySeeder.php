@@ -12,24 +12,23 @@ class CompanySeeder extends NeoSeeder
     public function run()
     {
         // Let's truncate our existing records to start from scratch.
-        $label = $this->client->makeLabel('Company');
-        foreach ($label->getNodes() as $company) {
-            $relationships = $company->getRelationships();
-            foreach ($relationships as $relationship)
-                $relationship->delete();
-            $company->delete();
-        }
+        $this->client->run('MATCH (c:Company) DETACH DELETE c');
 
         $faker = \Faker\Factory::create();
 
         // And now, let's create a few companies in our database:
         for ($i = 0; $i < 10; $i++) {
-            $company = $this->client->makeNode();
-            $company->setProperty('uuid', Uuid::uuid4()->toString());
-            $company->setProperty('name', $faker->company);
-            $company->setProperty('since', $faker->numberBetween(1900, 2100));
-            $company->save();
-            $company->addLabels([$label]); // Add a label, after saving node
+            $since = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
+            $query = 'CREATE (c:Company {
+                uuid: {uuid},
+                name: {name},
+                since: DATETIME({since})
+            })';
+            $this->client->run($query, [
+                'uuid' => Uuid::uuid4()->toString(),
+                'name' => $faker->company,
+                'since' => $since,
+            ]);
         }
     }
 }
