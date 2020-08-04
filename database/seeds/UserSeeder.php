@@ -30,7 +30,6 @@ class UserSeeder extends NeoSeeder
                     ]
                 ]);
 
-                $since = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
                 $taken_at = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
                 $left_at = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
                 $query = [
