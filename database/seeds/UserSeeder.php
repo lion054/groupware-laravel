@@ -20,7 +20,7 @@ class UserSeeder extends NeoSeeder
             $department = $record->get('d');
             $count = $faker->numberBetween(5, 10);
             for ($i = 0; $i < $count; $i++) {
-                $uuid = $this->getUuidToCreate('Company');
+                $uuid = $this->getUuidToCreate('User');
                 $this->client->run('CREATE (u:User) SET u += {infos}', [
                     'infos' => [
                         'uuid' => $uuid,

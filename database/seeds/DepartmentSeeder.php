@@ -19,7 +19,7 @@ class DepartmentSeeder extends NeoSeeder
         foreach ($result->getRecords() as $record) {
             $company = $record->get('c');
             for ($i = 0; $i < 10; $i++) {
-                $uuid = $this->getUuidToCreate('Company');
+                $uuid = $this->getUuidToCreate('Department');
                 $this->client->run('CREATE (d:Department) SET d += {infos}', [
                     'infos' => [
                         'uuid' => $uuid,
