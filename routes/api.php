@@ -23,3 +23,9 @@ Route::group([
     Route::post('auth/login_with_email_password', 'AuthController@loginWithEmailPassword');
     Route::get('auth/verify', 'AuthController@verify');
 });
+
+Route::group([
+    'middleware' => 'jwt.auth',
+], function () {
+    Route::get('users', 'UserController@index');
+});

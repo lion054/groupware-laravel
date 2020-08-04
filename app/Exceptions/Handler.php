@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -52,6 +53,11 @@ class Handler extends ExceptionHandler
                 'success' => FALSE,
                 'error' => 'Too many requests',
             ], 429);
+        } else if ($exception instanceof UnauthorizedHttpException) {
+            return response()->json([
+                'success' => FALSE,
+                'error' => 'Token not provided',
+            ], 401);
         }
         return parent::render($request, $exception);
     }
