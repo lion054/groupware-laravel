@@ -1,7 +1,5 @@
 <?php
 
-use Ramsey\Uuid\Uuid;
-
 class CompanySeeder extends NeoSeeder
 {
     /**
@@ -19,13 +17,15 @@ class CompanySeeder extends NeoSeeder
         // And now, let's create a few companies in our database:
         for ($i = 0; $i < 10; $i++) {
             $since = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
-            $query = 'CREATE (c:Company {
-                uuid: {uuid},
-                name: {name},
-                since: DATETIME({since})
-            })';
-            $this->client->run($query, [
-                'uuid' => Uuid::uuid4()->toString(),
+            $query = [
+                'CREATE (c:Company {',
+                    'uuid: {uuid},',
+                    'name: {name},',
+                    'since: DATETIME({since})',
+                '})',
+            ];
+            $this->client->run(implode(' ', $query), [
+                'uuid' => $this->getUuidToCreate('Company'),
                 'name' => $faker->company,
                 'since' => $since,
             ]);

@@ -1,7 +1,5 @@
 <?php
 
-use Ramsey\Uuid\Uuid;
-
 class UserSeeder extends NeoSeeder
 {
     /**
@@ -22,7 +20,7 @@ class UserSeeder extends NeoSeeder
             $department = $record->get('d');
             $count = $faker->numberBetween(5, 10);
             for ($i = 0; $i < $count; $i++) {
-                $uuid = Uuid::uuid4()->toString();
+                $uuid = $this->getUuidToCreate('Company');
                 $this->client->run('CREATE (u:User) SET u += {infos}', [
                     'infos' => [
                         'uuid' => $uuid,

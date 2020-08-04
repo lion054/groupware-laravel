@@ -31,4 +31,16 @@ class Controller extends BaseController
             ->addConnection('default', "http://$username:$password@$host:$port")
             ->build();
     }
+
+    protected function getUuidToCreate($label)
+    {
+        while (TRUE) {
+            $uuid = uniqid();
+            $record = $this->client->run('MATCH (n:' . $label . '{ uuid: {uuid} }) RETURN COUNT(*)', [
+                'uuid' => $uuid,
+            ])->getRecord();
+            if ($record->values()[0] == 0)
+                return $uuid;
+        }
+    }
 }
