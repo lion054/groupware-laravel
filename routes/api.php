@@ -18,7 +18,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::group([
-    // 'middleware' => 'throttle:3,1',
+    'middleware' => 'throttle:10,1', // The user can call auth APIs up to 10 times in every a minute
 ], function () {
     Route::post('auth/login_with_email_password', 'AuthController@loginWithEmailPassword');
     Route::get('auth/verify', 'AuthController@verify');
