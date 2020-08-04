@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 /*
  * This file is part of PHPUnit.
  *
@@ -12,7 +12,7 @@ namespace PHPUnit\Util;
 use PHPUnit\Framework\Exception;
 
 /**
- * @internal This class is not covered by the backward compatibility promise for PHPUnit
+ * Utility class that can print to STDOUT or write to a file.
  */
 class Printer
 {
@@ -24,7 +24,7 @@ class Printer
     protected $autoFlush = false;
 
     /**
-     * @psalm-var resource|closed-resource
+     * @var resource
      */
     protected $out;
 
@@ -36,7 +36,7 @@ class Printer
     /**
      * Constructor.
      *
-     * @param null|resource|string $out
+     * @param null|mixed $out
      *
      * @throws Exception
      */
@@ -77,8 +77,6 @@ class Printer
     public function flush(): void
     {
         if ($this->out && \strncmp($this->outTarget, 'php://', 6) !== 0) {
-            \assert(\is_resource($this->out));
-
             \fclose($this->out);
         }
     }
@@ -93,8 +91,6 @@ class Printer
     public function incrementalFlush(): void
     {
         if ($this->out) {
-            \assert(\is_resource($this->out));
-
             \fflush($this->out);
         } else {
             \flush();
@@ -104,8 +100,6 @@ class Printer
     public function write(string $buffer): void
     {
         if ($this->out) {
-            \assert(\is_resource($this->out));
-
             \fwrite($this->out, $buffer);
 
             if ($this->autoFlush) {
