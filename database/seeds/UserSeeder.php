@@ -38,7 +38,7 @@ class UserSeeder extends NeoSeeder
                 $query = 'MATCH (u:User),(d:Department)
                     WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}
                     CREATE (u)-[r:WORKING_AT{
-                        duty: {duty},
+                        position: {position},
                         taken_at: DATETIME({taken_at}),
                         left_at: DATETIME({left_at})
                     }]->(d)
@@ -46,7 +46,7 @@ class UserSeeder extends NeoSeeder
                 $this->client->run($query, [
                     'u_uuid' => $uuid,
                     'd_uuid' => $department->value('uuid'),
-                    'duty' => $faker->boolean ? 'Master' : 'Engineer',
+                    'position' => $faker->boolean ? 'Master' : 'Engineer',
                     'taken_at' => $taken_at,
                     'left_at' => $left_at,
                 ]);

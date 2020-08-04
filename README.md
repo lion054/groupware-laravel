@@ -1,65 +1,55 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+# The App Logic
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+## The Nodes
 
-## About Laravel
+### User
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+Attribute: name, email, password, etc.
+Related to: Company (n:1), Department (m:n).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Company
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+Attribute: name, since, etc.
+Related to: Team (1:n), User (1:n).
 
-## Learning Laravel
+### Department
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+Attribute: name, capacity, etc.
+Related to: Company (n:1), User (m:n).
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+## The Edges
 
-## Laravel Sponsors
+### User-Department
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+Attribute: position, taken_at, left_at, etc.
+The user can have more than one position for its department.
+This means multiple edges can exist between user and department.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- [UserInsights](https://userinsights.com)
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
-- [iMi digital](https://www.imi-digital.de/)
-- [Earthlink](https://www.earthlink.ro/)
-- [Steadfast Collective](https://steadfastcollective.com/)
+# The App Structure
 
-## Contributing
+## Neo4j
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Database is Neo4j that represents the graph data.
+All groupware projects need group management and permission process thereof.
 
-## Security Vulnerabilities
+## Laravel 5.6
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+This API server uses "vinelab/neoeloquent" to access the Neo4j database.
+NeoEloquent is supported in Laravel 5.6.
 
-## License
+### Why NeoEloquent?
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+NeoEloquent is a knid of Eloquent, so it is suitable for dealing with JWT token and verification thereof.
+NeoEloquent contains many miscellaneous classes, so it is more heavy than "GraphAware Neo4j PHP Client".
+And it is not obvious for making relationship between nodes.
+So NeoEloquent will be used as User class for JWT token.
+It is so hard to create the alternative to User class for verification of JWT auth by oneself.
+So I will use JWT auth as is. And I will use NeoEloquent for User class, as JWT auth needs the Eloquent. But I will use neo4j-php-client not NeoEloquent in general cases, as neo4j-php-client is lighter than NeoEloquent.
+
+## Customization of Laravel 5.6
+
+### Retrieving Boolean Input Values
+
+The disadvantage of Laravel 5.6 is that it doesn't support "retrieving Boolean Input Values" for request.
+But it was solved since Laravel 6.x.
+This will be fixed by adding customized Reqeust class.
