@@ -28,4 +28,8 @@ Route::group([
     'middleware' => 'jwt.auth',
 ], function () {
     Route::get('users', 'UserController@index');
+    Route::get('users/{uuid}', 'UserController@show');
+    Route::post('users', 'UserController@store');
+    Route::put('users/{uuid}', 'UserController@update');
+    Route::delete('users/{uuid}', 'UserController@delete');
 });

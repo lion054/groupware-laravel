@@ -29,11 +29,13 @@ class DepartmentSeeder extends NeoSeeder
                         'capacity' => $faker->numberBetween(5, 10),
                     ]
                 ]);
-                $query = 'MATCH (d:Department),(c:Company)
-                    WHERE d.uuid = {d_uuid} AND c.uuid = {c_uuid}
-                    CREATE (d)-[r:PART_OF]->(c)
-                    RETURN r';
-                $this->client->run($query, [
+                $query = [
+                    'MATCH (d:Department),(c:Company)',
+                    'WHERE d.uuid = {d_uuid} AND c.uuid = {c_uuid}',
+                    'CREATE (d)-[r:PART_OF]->(c)',
+                    'RETURN r',
+                ];
+                $this->client->run(implode(' ', $query), [
                     'd_uuid' => $uuid,
                     'c_uuid' => $company->value('uuid'),
                 ]);

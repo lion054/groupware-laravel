@@ -35,15 +35,17 @@ class UserSeeder extends NeoSeeder
                 $since = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
                 $taken_at = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
                 $left_at = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
-                $query = 'MATCH (u:User),(d:Department)
-                    WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}
-                    CREATE (u)-[r:WORKING_AT{
-                        position: {position},
-                        taken_at: DATETIME({taken_at}),
-                        left_at: DATETIME({left_at})
-                    }]->(d)
-                    RETURN r';
-                $this->client->run($query, [
+                $query = [
+                    'MATCH (u:User),(d:Department)',
+                    'WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}',
+                    'CREATE (u)-[r:WORKING_AT{',
+                        'position: {position},',
+                        'taken_at: DATETIME({taken_at}),',
+                        'left_at: DATETIME({left_at})',
+                    '}]->(d)',
+                    'RETURN r',
+                ];
+                $this->client->run(implode(' ', $query), [
                     'u_uuid' => $uuid,
                     'd_uuid' => $department->value('uuid'),
                     'position' => $faker->boolean ? 'Master' : 'Engineer',
