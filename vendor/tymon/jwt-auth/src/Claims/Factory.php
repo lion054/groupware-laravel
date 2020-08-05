@@ -137,7 +137,14 @@ class Factory
      */
     public function exp()
     {
-        return Utils::now()->addMinutes($this->ttl)->getTimestamp();
+        // return Utils::now()->addMinutes($this->ttl)->getTimestamp();
+        /**
+         * The above function works differently for Windows and Linux
+         * Linux returns in milliseconds
+         * Windows returns in seconds
+         * So modify as follows
+         */
+        return round(microtime(true) * 1000);
     }
 
     /**
