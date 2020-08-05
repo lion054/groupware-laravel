@@ -41,24 +41,18 @@ class NeoSeeder extends Seeder
         }
     }
 
-    private function makeUuidForRelation($fromUuid, $toUuid, $type)
+    private function makeUuidForRelation()
     {
-        $query = [
-            "MATCH (from{ uuid: {from_uuid} })-[r:$type]->(to{ uuid: {to_uuid} })",
-            'RETURN r',
-        ];
-        $records = $this->client->run(implode(' ', $query), [
-            'from_uuid' => $fromUuid,
-            'to_uuid' => $toUuid,
-        ])->getRecords();
-        $uuids = [];
-        foreach ($records as $record) {
-            $relation = $record->get('r');
-            $uuids[] = $relation->value('uuid');
-        }
         while (TRUE) {
             $uuid = uniqid();
-            if (!in_array($uuid, $uuids))
+            $query = [
+                'MATCH ()-[r{ uuid: {uuid} }]->()',
+                'RETURN COUNT(r)',
+            ];
+            $record = $this->client->run(implode(' ', $query), [
+                'uuid' => $uuid,
+            ])->getRecord();
+            if ($record->values()[0] == 0)
                 return $uuid;
         }
     }
@@ -79,8 +73,8 @@ class NeoSeeder extends Seeder
     protected function createNode($label, $data)
     {
         $info = [];
-        foreach (array_keys($data) as $key)
-            $info[$key] = $data[$key];
+        foreach ($data as $key => $value)
+            $info[$key] = $value;
         $info['uuid'] = $this->makeUuidForNode();
         $query = [
             "CREATE (n:$label)",
@@ -102,10 +96,10 @@ class NeoSeeder extends Seeder
         ];
         $info = [];
         if ($data) {
-            foreach (array_keys($data) as $key)
-                $info[$key] = $data[$key];
+            foreach ($data as $key => $value)
+                $info[$key] = $value;
         }
-        $info['uuid'] = $this->makeUuidForRelation($fromUuid, $toUuid, $type);
+        $info['uuid'] = $this->makeUuidForRelation();
         $this->client->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,

@@ -40,11 +40,7 @@ class UserController extends Controller
 
     public function show($uuid)
     {
-        $record = $this->client->run('MATCH (u:User{ uuid: {uuid} }) RETURN u', [
-            'uuid' => $uuid,
-        ])->getRecord();
-        $result = $record->get('u');
-        return $result;
+        return $this->getNode($uuid);
     }
 
     public function store(Request $request)
@@ -53,9 +49,6 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'relation.role' => 'required_with:related_to',
-            'relation.took_at' => 'date',
-            'relation.left_at' => 'date',
         ]);
         $validator->after(function ($validator) use ($request) {
             if (!$validator->errors()->has('email')) {
@@ -70,22 +63,10 @@ class UserController extends Controller
             ];
         }
 
-        $user = $this->createNode('User', [
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')),
-        ]);
-
-        $related_to = $request->input('related_to');
-        if (!empty($related_to)) {
-            $this->createRelation($user->value('uuid'), $related_to, 'WORKS_AT', [
-                'role' => $request->input('relation.role'),
-                'took_at' => $request->input('relation.took_at'),
-                'left_at' => $request->input('relation.left_at'),
-            ]);
-        }
-
-        return $user->values();
+        $data = $request->only(['name', 'email', 'password']);
+        $data['password'] = Hash::make($data['password']);
+        $node = $this->createNode('User', $data);
+        return $node->values();
     }
 
     public function update(Request $request, $uuid)
@@ -93,9 +74,6 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'email',
             'password' => 'min:6',
-            'role' => 'required_with:related_to',
-            'took_at' => 'date',
-            'left_at' => 'date',
         ]);
         $validator->after(function ($validator) use ($request, $uuid) {
             if (!$validator->errors()->has('email')) {
@@ -110,70 +88,12 @@ class UserController extends Controller
             ];
         }
 
-        $data = [];
-        if ($request->has('name'))
-            $data['name'] = $request->input('name');
-        if ($request->has('email'))
-            $data['email'] = $request->input('email');
-        if ($request->has('password'))
-            $data['password'] = $request->input('password');
+        $data = $request->only(['name', 'email', 'password']);
         if (empty($data))
-            $user = $this->getNode($uuid);
+            $node = $this->getNode($uuid);
         else
-            $user = $this->updaetNode($uuid, $data);
-
-        $related_to = $request->input('related_to');
-        if (!empty($related_to)) {
-            $record = $this->client->run('MATCH (u:User{ uuid: {uuid} })-->(d:Department) RETURN d', [
-                'uuid' => $uuid,
-            ])->getRecord();
-            $newRelation = TRUE;
-            if ($record) {
-                $department = $record->get('d');
-                if ($related_to == $department->value('uuid')) {
-                    $this->client->run('MATCH (u:User{ uuid: {uuid} })-[r:WORKS_AT]->() DELETE r', [
-                        'uuid' => $uuid,
-                    ]);
-                    $newRelation = FALSE;
-                }
-            }
-            $role = $request->input('role');
-            $took_at = $request->input('took_at');
-            $left_at = $request->input('left_at');
-            if ($newRelation) {
-                $query = [
-                    'MATCH (u:User),(d:Department)',
-                    'WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}',
-                    'CREATE (u)-[r:WORKS_AT{',
-                        'role: {role},',
-                        'took_at: DATE({took_at}),',
-                        'left_at: DATE({left_at})',
-                    '}]->(d)',
-                ];
-                $this->client->run(implode(' ', $query), [
-                    'u_uuid' => $uuid,
-                    'd_uuid' => $related_to,
-                    'role' => $role,
-                    'took_at' => $took_at,
-                    'left_at' => $left_at,
-                ]);
-            } else {
-                $fields = ['r.role = {role}'];
-                if (!empty($took_at))
-                    $fields[] = 'r.took_at = DATE({took_at})';
-                if (!empty($left_at))
-                    $fields[] = 'r.left_at = DATE({left_at})';
-                $this->client->run('MATCH (u:User{ uuid: {u_uuid} })-[r:WORKS_AT]->(d:Department{ uuid: {d_uuid} }) SET ' . implode(', ', $fields), [
-                    'u_uuid' => $uuid,
-                    'd_uuid' => $related_to,
-                    'role' => $role,
-                    'took_at' => $took_at,
-                    'left_at' => $left_at,
-                ]);
-            }
-        }
-
-        return $user->values();
+            $node = $this->updaetNode($uuid, $data);
+        return $node->values();
     }
 
     public function delete(Request $request, $uuid)

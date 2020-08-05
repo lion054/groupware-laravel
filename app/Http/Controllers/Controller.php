@@ -48,24 +48,18 @@ class Controller extends BaseController
         }
     }
 
-    private function makeUuidForRelation($fromUuid, $toUuid, $type)
+    private function makeUuidForRelation()
     {
-        $query = [
-            "MATCH (from{ uuid: {from_uuid} })-[r:$type]->(to{ uuid: {to_uuid} })",
-            'RETURN r',
-        ];
-        $records = $this->client->run(implode(' ', $query), [
-            'from_uuid' => $fromUuid,
-            'to_uuid' => $toUuid,
-        ])->getRecords();
-        $uuids = [];
-        foreach ($records as $record) {
-            $relation = $record->get('r');
-            $uuids[] = $relation->value('uuid');
-        }
         while (TRUE) {
             $uuid = uniqid();
-            if (!in_array($uuid, $uuids))
+            $query = [
+                'MATCH ()-[r{ uuid: {uuid} }]->()',
+                'RETURN COUNT(r)',
+            ];
+            $record = $this->client->run(implode(' ', $query), [
+                'uuid' => $uuid,
+            ])->getRecord();
+            if ($record->values()[0] == 0)
                 return $uuid;
         }
     }
@@ -86,8 +80,8 @@ class Controller extends BaseController
     protected function createNode($label, $data)
     {
         $info = [];
-        foreach (array_keys($data) as $key)
-            $info[$key] = $data[$key];
+        foreach ($data as $key => $value)
+            $info[$key] = $value;
         $info['uuid'] = $this->makeUuidForNode();
         $query = [
             "CREATE (n:$label)",
@@ -109,10 +103,10 @@ class Controller extends BaseController
         ];
         $info = [];
         if ($data) {
-            foreach (array_keys($data) as $key)
-                $info[$key] = $data[$key];
+            foreach ($data as $key => $value)
+                $info[$key] = $value;
         }
-        $info['uuid'] = $this->makeUuidForRelation($fromUuid, $toUuid, $type);
+        $info['uuid'] = $this->makeUuidForRelation();
         $this->client->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,
@@ -130,6 +124,18 @@ class Controller extends BaseController
             'uuid' => $uuid,
         ])->getRecord();
         return $record->get('n');
+    }
+
+    protected function getRelation($uuid)
+    {
+        $query = [
+            'MATCH ()-[r{ uuid: {uuid} }]->()',
+            'RETURN r',
+        ];
+        $record = $this->client->run(implode(' ', $query), [
+            'uuid' => $uuid,
+        ])->getRecord();
+        return $record->get('r');
     }
 
     protected function getRelations($fromUuid, $toUuid, $type)
@@ -150,38 +156,50 @@ class Controller extends BaseController
 
     protected function updateNode($uuid, $data)
     {
-        $fields = [];
+        $validData = [];
+        $invalidKeys = [];
         $info = [];
-        foreach (array_keys($data) as $key) {
-            $fields[] = "$key = {$key}";
-            $info[$key] = $data[$key];
+        foreach ($data as $key => $value) {
+            if (empty($value))
+                $invalidKeys[] = "n.$key";
+            else {
+                $validData[] = "n.$key = {$key}";
+                $info[$key] = $value;
+            }
         }
         $info['uuid'] = $uuid;
         $query = [
             'MATCH (n{ uuid: {uuid} })',
-            'SET ' . implode(', ', $fields),
-            'RETURN n',
+            'SET ' . implode(', ', $validData),
         ];
+        if (!empty($invalidKeys))
+            $query[] = 'REMOVE ' . implode(', ', $invalidKeys);
+        $query[] = 'RETURN n';
         $record = $this->client->run(implode(' ', $query), $info)->getRecord();
         return $record->get('n');
     }
 
-    protected function updateRelation($fromUuid, $toUuid, $type, $uuid, $data)
+    protected function updateRelation($uuid, $data)
     {
-        $fields = [];
+        $validData = [];
+        $invalidKeys = [];
         $info = [];
-        foreach (array_keys($data) as $key) {
-            $fields[] = "r.$key = {$key}";
-            $info[$key] = $data[$key];
+        foreach ($data as $key => $value) {
+            if (empty($value))
+                $invalidKeys[] = "r.$key";
+            else {
+                $validData[] = "r.$key = {$key}";
+                $info[$key] = $value;
+            }
         }
-        $info['from_uuid'] = $fromUuid;
-        $info['to_uuid'] = $toUuid;
         $info['uuid'] = $uuid;
         $query = [
-            "MATCH (from{ uuid: {from_uuid} })-[r:$type{ uuid: {uuid} }]->(to{ uuid: {to_uuid} })",
-            'SET ' . implode(', ', $fields),
-            'RETURN r',
+            'MATCH ()-[r{ uuid: {uuid} }]->()',
+            'SET ' . implode(', ', $validData),
         ];
+        if (!empty($emptyData))
+            $query[] = 'REMOVE ' . implode(', ', $invalidKeys);
+        $query[] = 'RETURN r';
         $record = $this->client->run(implode(' ', $query), $info)->getRecord();
         return $record->get('r');
     }
