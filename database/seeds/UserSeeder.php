@@ -10,9 +10,17 @@ class UserSeeder extends NeoSeeder
     public function run()
     {
         // Let's truncate our existing records to start from scratch.
-        $this->client->run('MATCH (u:User) DETACH DELETE u');
+        $query = [
+            'MATCH (u:User)',
+            'DETACH DELETE u',
+        ];
+        $this->client->run(implode(' ', $query));
 
-        $result = $this->client->run('MATCH (d:Department) RETURN d');
+        $query = [
+            'MATCH (d:Department)',
+            'RETURN d',
+        ];
+        $result = $this->client->run(implode(' ', $query));
         $faker = \Faker\Factory::create();
 
         // And now, let's create a few users in our database:

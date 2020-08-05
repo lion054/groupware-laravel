@@ -10,7 +10,11 @@ class CompanySeeder extends NeoSeeder
     public function run()
     {
         // Let's truncate our existing records to start from scratch.
-        $this->client->run('MATCH (c:Company) DETACH DELETE c');
+        $query = [
+            'MATCH (c:Company)',
+            'DETACH DELETE c',
+        ];
+        $this->client->run(implode(' ', $query));
 
         $faker = \Faker\Factory::create();
 

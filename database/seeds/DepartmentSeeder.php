@@ -10,9 +10,17 @@ class DepartmentSeeder extends NeoSeeder
     public function run()
     {
         // Let's truncate our existing records to start from scratch.
-        $this->client->run('MATCH (d:Department) DETACH DELETE d');
+        $query = [
+            'MATCH (d:Department)',
+            'DETACH DELETE d',
+        ];
+        $this->client->run(implode(' ', $query));
 
-        $result = $this->client->run('MATCH (c:Company) RETURN c');
+        $query = [
+            'MATCH (c:Company)',
+            'RETURN c',
+        ];
+        $result = $this->client->run(implode(' ', $query));
         $faker = \Faker\Factory::create();
 
         // And now, let's create a few departments in our database:
@@ -23,7 +31,7 @@ class DepartmentSeeder extends NeoSeeder
                     'name' => $faker->company,
                     'capacity' => $faker->numberBetween(5, 10),
                 ]);
-                $this->createRelation($department->value('uuid'), $company->value('uuid'), 'PART_OF');
+                $this->createRelation($department->value('uuid'), $company->value('uuid'), 'ATTACHED_TO');
             }
         }
     }
