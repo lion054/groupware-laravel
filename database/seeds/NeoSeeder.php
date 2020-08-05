@@ -87,11 +87,27 @@ class NeoSeeder extends Seeder
         return $record->get('n');
     }
 
-    protected function createRelation($fromUuid, $toUuid, $type, $data = NULL)
+    protected function createRelation($fromUuid, $toUuid, $type, $data = NULL, $direction = 'OUTGOING')
     {
+        $left = '-';
+        $right = '->';
+        switch ($direction) {
+            case 'INCOMING':
+                $left = '<-';
+                $right = '-';
+            break;
+            case 'OUTGOING':
+                $left = '-';
+                $right = '->';
+            break;
+            case 'BOTH':
+                $left = '-';
+                $right = '-';
+            break;
+        }
         $query = [
             'MATCH (from{ uuid: {from_uuid} }),(to{ uuid: {to_uuid} })',
-            "CREATE (from)-[r:$type]->(to)",
+            'CREATE (from)' . $left . "[r:$type]" . $right . '(to)',
             'SET r += {info}',
             'RETURN r',
         ];
@@ -106,6 +122,6 @@ class NeoSeeder extends Seeder
             'to_uuid' => $toUuid,
             'info' => $info,
         ])->getRecord();
-        return $record->get('c');
+        return $record->get('r');
     }
 }

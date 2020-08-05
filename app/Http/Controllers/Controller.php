@@ -94,11 +94,27 @@ class Controller extends BaseController
         return $record->get('n');
     }
 
-    protected function createRelation($fromUuid, $toUuid, $type, $data = NULL)
+    protected function createRelation($fromUuid, $toUuid, $type, $data = NULL, $direction = 'OUTGOING')
     {
+        $left = '-';
+        $right = '->';
+        switch ($direction) {
+            case 'INCOMING':
+                $left = '<-';
+                $right = '-';
+            break;
+            case 'OUTGOING':
+                $left = '-';
+                $right = '->';
+            break;
+            case 'BOTH':
+                $left = '-';
+                $right = '-';
+            break;
+        }
         $query = [
             'MATCH (from{ uuid: {from_uuid} }),(to{ uuid: {to_uuid} })',
-            "CREATE (from)-[r:$type]->(to)",
+            'CREATE (from)' . $left . "[r:$type]" . $right . '(to)',
             'SET r += {info}',
             'RETURN r',
         ];
@@ -204,5 +220,19 @@ class Controller extends BaseController
         $query[] = 'RETURN r';
         $record = $this->client->run(implode(' ', $query), $info)->getRecord();
         return $record->get('r');
+    }
+
+    protected function deleteNode($uuid)
+    {}
+
+    protected function deleteRelation($uuid)
+    {
+        $query = [
+            'MATCH ()-[r{ uuid: {uuid} }]-()',
+            'DELETE r',
+        ];
+        $this->client->run(implode(' ', $query), [
+            'uuid' => $uuid,
+        ]);
     }
 }
