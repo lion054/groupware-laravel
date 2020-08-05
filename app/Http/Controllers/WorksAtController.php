@@ -91,10 +91,9 @@ class WorksAtController extends Controller
         return $node->values();
     }
 
-    public function delete(Request $request, $uuid)
+    public function destroy($uuid)
     {
-        if ($request->boolean('permanent')) {
-        } else {
-        }
+        $this->deleteNode($uuid);
+        return 204;
     }
 }

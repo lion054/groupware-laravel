@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
+use App\Http\Requests\CustomRequest;
+
 class UserController extends Controller
 {
     public function index(Request $request)
@@ -96,10 +98,34 @@ class UserController extends Controller
         return $node->values();
     }
 
-    public function delete(Request $request, $uuid)
+    public function destroy(CustomRequest $request, $uuid)
     {
-        if ($request->boolean('permanent')) {
-        } else {
+        $validator = Validator::make($request->all(), [
+            'permanent' => 'in:1,0,true,false,on,off,yes,no',
+        ]);
+        if ($validator->fails()) {
+            return [
+                'success' => FALSE,
+                'errors' => $validator->messages(),
+            ];
         }
+
+        if ($request->boolean('permanent'))
+            $this->deleteNode($uuid);
+        else {
+            $this->updaetNode($uuid, [
+                'deleted_at' => date(DateTimeInterface::RFC3339_EXTENDED),
+            ]);
+        }
+
+        return 204;
+    }
+
+    public function restore($uuid)
+    {
+        $node = $this->updaetNode($uuid, [
+            'deleted_at' => NULL,
+        ]);
+        return $node->values();
     }
 }

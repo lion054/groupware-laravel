@@ -223,7 +223,15 @@ class Controller extends BaseController
     }
 
     protected function deleteNode($uuid)
-    {}
+    {
+        $query = [
+            'MATCH (n{ uuid: {uuid} })',
+            'DETACH DELETE n',
+        ];
+        $this->client->run(implode(' ', $query), [
+            'uuid' => $uuid,
+        ]);
+    }
 
     protected function deleteRelation($uuid)
     {

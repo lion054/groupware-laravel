@@ -31,5 +31,12 @@ Route::group([
     Route::get('users/{uuid}', 'UserController@show');
     Route::post('users', 'UserController@store');
     Route::put('users/{uuid}', 'UserController@update');
-    Route::delete('users/{uuid}', 'UserController@delete');
+    Route::delete('users/{uuid}', 'UserController@destroy');
+    Route::patch('users/{uuid}', 'UserController@restore');
+
+    Route::get('works_at', 'WorksAtController@index');
+    Route::get('works_at/{uuid}', 'WorksAtController@show');
+    Route::post('works_at', 'WorksAtController@store');
+    Route::put('works_at/{uuid}', 'WorksAtController@update');
+    Route::delete('works_at/{uuid}', 'WorksAtController@destroy');
 });
