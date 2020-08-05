@@ -60,7 +60,7 @@ class UserController extends Controller
         $validator->after(function ($validator) use ($request) {
             if (!$validator->errors()->has('email')) {
                 if (!$this->checkUnique('User', 'email', $request->input('email')))
-                    $validator->errors()->add('email', 'Email already exists');
+                    $validator->errors()->add('email', 'This email was registered already');
             }
         });
         if ($validator->fails()) {
@@ -100,7 +100,7 @@ class UserController extends Controller
         $validator->after(function ($validator) use ($request, $uuid) {
             if (!$validator->errors()->has('email')) {
                 if (!$this->checkUnique('User', 'email', $request->input('email'), $uuid))
-                    $validator->errors()->add('email', 'Email already exists');
+                    $validator->errors()->add('email', 'This email was registered already');
             }
         });
         if ($validator->fails()) {
