@@ -70,36 +70,18 @@ class UserController extends Controller
             ];
         }
 
-        $uuid = $this->getUuidToCreate('User');
-        $record = $this->client->run('CREATE (u:User) SET u += {infos} RETURN u', [
-            'infos' => [
-                'uuid' => $uuid,
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'password' => Hash::make($request->input('password')),
-            ]
-        ])->getRecord();
-        $user = $record->get('u');
+        $user = $this->createNode('User', [
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'password' => Hash::make($request->input('password')),
+        ]);
 
         $department_uuid = $request->input('department_uuid');
         if (!empty($department_uuid)) {
-            $taken_at = $request->input('taken_at');
-            $left_at = $request->input('left_at');
-            $query = [
-                'MATCH (u:User),(d:Department)',
-                'WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}',
-                'CREATE (u)-[r:WORKING_AT{',
-                    'position: {position},',
-                    'taken_at: DATE({taken_at}),',
-                    'left_at: DATE({left_at})',
-                '}]->(d)',
-            ];
-            $this->client->run(implode(' ', $query), [
-                'u_uuid' => $uuid,
-                'd_uuid' => $department_uuid,
+            $this->createRelation($user->value('uuid'), $department_uuid, 'WORKING_AT', [
                 'position' => $request->input('position'),
-                'taken_at' => $taken_at,
-                'left_at' => $left_at,
+                'took_at' => $request->input('took_at'),
+                'left_at' => $request->input('left_at'),
             ]);
         }
 
@@ -168,7 +150,7 @@ class UserController extends Controller
                 }
             }
             $position = $request->input('position');
-            $taken_at = $request->input('taken_at');
+            $took_at = $request->input('took_at');
             $left_at = $request->input('left_at');
             if ($newRelation) {
                 $query = [
@@ -176,7 +158,7 @@ class UserController extends Controller
                     'WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}',
                     'CREATE (u)-[r:WORKING_AT{',
                         'position: {position},',
-                        'taken_at: DATE({taken_at}),',
+                        'took_at: DATE({took_at}),',
                         'left_at: DATE({left_at})',
                     '}]->(d)',
                 ];
@@ -184,7 +166,7 @@ class UserController extends Controller
                     'u_uuid' => $uuid,
                     'd_uuid' => $department_uuid,
                     'position' => $position,
-                    'taken_at' => $taken_at,
+                    'took_at' => $took_at,
                     'left_at' => $left_at,
                 ]);
             } else {
@@ -192,15 +174,15 @@ class UserController extends Controller
                     'MATCH (u:User{ uuid: {u_uuid} })-[r:WORKING_AT]->(d:Department{ uuid: {d_uuid} })'
                 ];
                 $fields = ['r.position = {position}'];
-                if (!empty($taken_at))
-                    $fields[] = 'r.taken_at = DATE({taken_at})';
+                if (!empty($took_at))
+                    $fields[] = 'r.took_at = DATE({took_at})';
                 if (!empty($left_at))
                     $fields[] = 'r.left_at = DATE({left_at})';
                 $this->client->run('MATCH (u:User{ uuid: {u_uuid} })-[r:WORKING_AT]->(d:Department{ uuid: {d_uuid} }) SET ' . implode(', ', $fields), [
                     'u_uuid' => $uuid,
                     'd_uuid' => $department_uuid,
                     'position' => $position,
-                    'taken_at' => $taken_at,
+                    'took_at' => $took_at,
                     'left_at' => $left_at,
                 ]);
             }

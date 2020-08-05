@@ -20,33 +20,15 @@ class UserSeeder extends NeoSeeder
             $department = $record->get('d');
             $count = $faker->numberBetween(5, 10);
             for ($i = 0; $i < $count; $i++) {
-                $uuid = $this->getUuidToCreate('User');
-                $this->client->run('CREATE (u:User) SET u += {infos}', [
-                    'infos' => [
-                        'uuid' => $uuid,
-                        'name' => $faker->name,
-                        'email' => $faker->email,
-                        'password' => Hash::make('123456'),
-                    ]
+                $user = $this->createNode('User', [
+                    'name' => $faker->name,
+                    'email' => $faker->email,
+                    'password' => Hash::make('123456'),
                 ]);
-
-                $taken_at = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
-                $left_at = $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED);
-                $query = [
-                    'MATCH (u:User),(d:Department)',
-                    'WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}',
-                    'CREATE (u)-[r:WORKING_AT{',
-                        'position: {position},',
-                        'taken_at: DATETIME({taken_at}),',
-                        'left_at: DATETIME({left_at})',
-                    '}]->(d)',
-                ];
-                $this->client->run(implode(' ', $query), [
-                    'u_uuid' => $uuid,
-                    'd_uuid' => $department->value('uuid'),
+                $this->createRelation($user->value('uuid'), $department->value('uuid'), 'WORKING_AT', [
                     'position' => $faker->boolean ? 'Master' : 'Engineer',
-                    'taken_at' => $taken_at,
-                    'left_at' => $left_at,
+                    'took_at' => $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED),
+                    'left_at' => $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED),
                 ]);
             }
         }

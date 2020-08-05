@@ -21,7 +21,7 @@ Related to: Company (n:1), User (m:n).
 
 ### User-Department
 
-Attribute: position, taken_at, left_at, etc.
+Attribute: position, took_at, left_at, etc.
 The user can have more than one position for its department.
 This means multiple edges can exist between user and department.
 

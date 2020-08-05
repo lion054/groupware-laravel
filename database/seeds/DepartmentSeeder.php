@@ -19,24 +19,11 @@ class DepartmentSeeder extends NeoSeeder
         foreach ($result->getRecords() as $record) {
             $company = $record->get('c');
             for ($i = 0; $i < 10; $i++) {
-                $uuid = $this->getUuidToCreate('Department');
-                $this->client->run('CREATE (d:Department) SET d += {infos}', [
-                    'infos' => [
-                        'uuid' => $uuid,
-                        'name' => $faker->company,
-                        'capacity' => $faker->numberBetween(5, 10),
-                    ]
+                $department = $this->createNode('Department', [
+                    'name' => $faker->company,
+                    'capacity' => $faker->numberBetween(5, 10),
                 ]);
-                $query = [
-                    'MATCH (d:Department),(c:Company)',
-                    'WHERE d.uuid = {d_uuid} AND c.uuid = {c_uuid}',
-                    'CREATE (d)-[r:PART_OF]->(c)',
-                    'RETURN r',
-                ];
-                $this->client->run(implode(' ', $query), [
-                    'd_uuid' => $uuid,
-                    'c_uuid' => $company->value('uuid'),
-                ]);
+                $this->createRelation($department->value('uuid'), $company->value('uuid'), 'PART_OF');
             }
         }
     }
