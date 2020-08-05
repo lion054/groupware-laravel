@@ -93,6 +93,7 @@ class NeoSeeder extends Seeder
             'MATCH (from{ uuid: {from_uuid} }),(to{ uuid: {to_uuid} })',
             "CREATE (from)-[r:$type]->(to)",
             'SET r += {info}',
+            'RETURN r',
         ];
         $info = [];
         if ($data) {
@@ -100,10 +101,11 @@ class NeoSeeder extends Seeder
                 $info[$key] = $value;
         }
         $info['uuid'] = $this->makeUuidForRelation();
-        $this->client->run(implode(' ', $query), [
+        $record = $this->client->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,
             'info' => $info,
-        ]);
+        ])->getRecord();
+        return $record->get('c');
     }
 }

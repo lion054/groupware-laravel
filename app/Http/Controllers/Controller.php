@@ -100,6 +100,7 @@ class Controller extends BaseController
             'MATCH (from{ uuid: {from_uuid} }),(to{ uuid: {to_uuid} })',
             "CREATE (from)-[r:$type]->(to)",
             'SET r += {info}',
+            'RETURN r',
         ];
         $info = [];
         if ($data) {
@@ -107,11 +108,12 @@ class Controller extends BaseController
                 $info[$key] = $value;
         }
         $info['uuid'] = $this->makeUuidForRelation();
-        $this->client->run(implode(' ', $query), [
+        $record = $this->client->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,
             'info' => $info,
-        ]);
+        ])->getRecord();
+        return $record->get('r');
     }
 
     protected function getNode($uuid)
