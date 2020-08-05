@@ -25,8 +25,8 @@ class UserSeeder extends NeoSeeder
                     'email' => $faker->email,
                     'password' => Hash::make('123456'),
                 ]);
-                $this->createRelation($user->value('uuid'), $department->value('uuid'), 'WORKING_AT', [
-                    'position' => $faker->boolean ? 'Master' : 'Engineer',
+                $this->createRelation($user->value('uuid'), $department->value('uuid'), 'WORKS_AT', [
+                    'role' => $faker->boolean ? 'Master' : 'Engineer',
                     'took_at' => $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED),
                     'left_at' => $faker->dateTimeBetween('-10 years', '-2 years')->format(DateTimeInterface::RFC3339_EXTENDED),
                 ]);

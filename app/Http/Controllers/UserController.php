@@ -53,9 +53,9 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'position' => 'required_with:department_uuid',
-            'taked_at' => 'date',
-            'left_at' => 'date',
+            'relation.role' => 'required_with:related_to',
+            'relation.took_at' => 'date',
+            'relation.left_at' => 'date',
         ]);
         $validator->after(function ($validator) use ($request) {
             if (!$validator->errors()->has('email')) {
@@ -76,12 +76,12 @@ class UserController extends Controller
             'password' => Hash::make($request->input('password')),
         ]);
 
-        $department_uuid = $request->input('department_uuid');
-        if (!empty($department_uuid)) {
-            $this->createRelation($user->value('uuid'), $department_uuid, 'WORKING_AT', [
-                'position' => $request->input('position'),
-                'took_at' => $request->input('took_at'),
-                'left_at' => $request->input('left_at'),
+        $related_to = $request->input('related_to');
+        if (!empty($related_to)) {
+            $this->createRelation($user->value('uuid'), $related_to, 'WORKS_AT', [
+                'role' => $request->input('relation.role'),
+                'took_at' => $request->input('relation.took_at'),
+                'left_at' => $request->input('relation.left_at'),
             ]);
         }
 
@@ -93,8 +93,8 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'email',
             'password' => 'min:6',
-            'position' => 'required_with:department_uuid',
-            'taked_at' => 'date',
+            'role' => 'required_with:related_to',
+            'took_at' => 'date',
             'left_at' => 'date',
         ]);
         $validator->after(function ($validator) use ($request, $uuid) {
@@ -110,78 +110,63 @@ class UserController extends Controller
             ];
         }
 
-        $name = $request->input('name');
-        $email = $request->input('email');
-        $password = $request->input('password');
-        $fields = [];
-        if (!empty($name))
-            $fields[] = 'u.name = {name}';
-        if (!empty($email))
-            $fields[] = 'u.email = {email}';
-        if (!empty($name))
-            $fields[] = 'u.password = {password}';
-        if (!empty($fields)) {
-            $record = $this->client->run('MATCH (u:User{ uuid: {uuid} }) SET ' . implode(', ', $fields) . ' RETURN u', [
-                'uuid' => $uuid,
-                'name' => $request->input('name'),
-                'email' => $request->input('email'),
-                'password' => Hash::make($request->input('password')),
-            ])->getRecord();
-        } else {
-            $record = $this->client->run('MATCH (u:User{ uuid: {uuid} }) RETURN u', [
-                'uuid' => $uuid,
-            ])->getRecord();
-        }
-        $user = $record->get('u');
+        $data = [];
+        if ($request->has('name'))
+            $data['name'] = $request->input('name');
+        if ($request->has('email'))
+            $data['email'] = $request->input('email');
+        if ($request->has('password'))
+            $data['password'] = $request->input('password');
+        if (empty($data))
+            $user = $this->getNode($uuid);
+        else
+            $user = $this->updaetNode($uuid, $data);
 
-        $department_uuid = $request->input('department_uuid');
-        if (!empty($department_uuid)) {
+        $related_to = $request->input('related_to');
+        if (!empty($related_to)) {
             $record = $this->client->run('MATCH (u:User{ uuid: {uuid} })-->(d:Department) RETURN d', [
                 'uuid' => $uuid,
             ])->getRecord();
             $newRelation = TRUE;
             if ($record) {
                 $department = $record->get('d');
-                if ($department_uuid == $department->value('uuid')) {
-                    $this->client->run('MATCH (u:User{ uuid: {uuid} })-[r:WORKING_AT]->() DELETE r', [
+                if ($related_to == $department->value('uuid')) {
+                    $this->client->run('MATCH (u:User{ uuid: {uuid} })-[r:WORKS_AT]->() DELETE r', [
                         'uuid' => $uuid,
                     ]);
                     $newRelation = FALSE;
                 }
             }
-            $position = $request->input('position');
+            $role = $request->input('role');
             $took_at = $request->input('took_at');
             $left_at = $request->input('left_at');
             if ($newRelation) {
                 $query = [
                     'MATCH (u:User),(d:Department)',
                     'WHERE u.uuid = {u_uuid} AND d.uuid = {d_uuid}',
-                    'CREATE (u)-[r:WORKING_AT{',
-                        'position: {position},',
+                    'CREATE (u)-[r:WORKS_AT{',
+                        'role: {role},',
                         'took_at: DATE({took_at}),',
                         'left_at: DATE({left_at})',
                     '}]->(d)',
                 ];
                 $this->client->run(implode(' ', $query), [
                     'u_uuid' => $uuid,
-                    'd_uuid' => $department_uuid,
-                    'position' => $position,
+                    'd_uuid' => $related_to,
+                    'role' => $role,
                     'took_at' => $took_at,
                     'left_at' => $left_at,
                 ]);
             } else {
-                $query = [
-                    'MATCH (u:User{ uuid: {u_uuid} })-[r:WORKING_AT]->(d:Department{ uuid: {d_uuid} })'
-                ];
-                $fields = ['r.position = {position}'];
+                $fields = ['r.role = {role}'];
                 if (!empty($took_at))
                     $fields[] = 'r.took_at = DATE({took_at})';
                 if (!empty($left_at))
                     $fields[] = 'r.left_at = DATE({left_at})';
-                $this->client->run('MATCH (u:User{ uuid: {u_uuid} })-[r:WORKING_AT]->(d:Department{ uuid: {d_uuid} }) SET ' . implode(', ', $fields), [
+                $this->client->run('MATCH (u:User{ uuid: {u_uuid} })-[r:WORKS_AT]->(d:Department{ uuid: {d_uuid} }) SET ' . implode(', ', $fields), [
                     'u_uuid' => $uuid,
-                    'd_uuid' => $department_uuid,
-                    'position' => $position,
+                    'd_uuid' => $related_to,
+                    'role' => $role,
                     'took_at' => $took_at,
                     'left_at' => $left_at,
                 ]);
