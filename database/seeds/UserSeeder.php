@@ -40,7 +40,6 @@ class UserSeeder extends NeoSeeder
                         'taken_at: DATETIME({taken_at}),',
                         'left_at: DATETIME({left_at})',
                     '}]->(d)',
-                    'RETURN r',
                 ];
                 $this->client->run(implode(' ', $query), [
                     'u_uuid' => $uuid,

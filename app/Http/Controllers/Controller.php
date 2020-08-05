@@ -36,11 +36,21 @@ class Controller extends BaseController
     {
         while (TRUE) {
             $uuid = uniqid();
-            $record = $this->client->run('MATCH (n:' . $label . '{ uuid: {uuid} }) RETURN COUNT(*)', [
-                'uuid' => $uuid,
-            ])->getRecord();
-            if ($record->values()[0] == 0)
+            if ($this->checkUnique($label, 'uuid', $uuid))
                 return $uuid;
         }
+    }
+
+    protected function checkUnique($label, $field, $value, $excludingUuid = FALSE)
+    {
+        $query = ['MATCH (n:' . $label . '{ ' . $field . ': {value} })'];
+        if ($excludingUuid)
+            $query[] = 'WHERE n.uuid <> {uuid}';
+        $query[] = 'RETURN COUNT(*)';
+        $record = $this->client->run(implode(' ', $query), [
+            'value' => $value,
+            'uuid' => $excludingUuid,
+        ])->getRecord();
+        return $record->values()[0] == 0;
     }
 }
