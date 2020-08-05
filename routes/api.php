@@ -27,6 +27,24 @@ Route::group([
 Route::group([
     'middleware' => 'jwt.auth',
 ], function () {
+    Route::get('companies', 'CompanyController@index');
+    Route::get('companies/{uuid}', 'CompanyController@show');
+    Route::post('companies', 'CompanyController@store');
+    Route::put('companies/{uuid}', 'CompanyController@update');
+    Route::delete('companies/{uuid}', 'CompanyController@destroy');
+    Route::patch('companies/{uuid}', 'CompanyController@restore');
+
+    Route::get('departments', 'DepartmentController@index');
+    Route::get('departments/{uuid}', 'DepartmentController@show');
+    Route::post('departments', 'DepartmentController@store');
+    Route::put('departments/{uuid}', 'DepartmentController@update');
+    Route::delete('departments/{uuid}', 'DepartmentController@destroy');
+    Route::patch('departments/{uuid}', 'DepartmentController@restore');
+
+    Route::get('assigned_to/{uuid}', 'AssignedToController@show');
+    Route::post('assigned_to', 'AssignedToController@store');
+    Route::delete('assigned_to/{uuid}', 'AssignedToController@destroy');
+
     Route::get('users', 'UserController@index');
     Route::get('users/{uuid}', 'UserController@show');
     Route::post('users', 'UserController@store');

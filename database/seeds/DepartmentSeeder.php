@@ -31,7 +31,7 @@ class DepartmentSeeder extends NeoSeeder
                     'name' => $faker->company,
                     'capacity' => $faker->numberBetween(5, 10),
                 ]);
-                $this->createRelation($department->value('uuid'), $company->value('uuid'), 'ATTACHED_TO');
+                $this->createRelation($department->value('uuid'), $company->value('uuid'), 'ASSIGNED_TO');
             }
         }
     }
