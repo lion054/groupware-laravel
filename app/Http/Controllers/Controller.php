@@ -147,7 +147,7 @@ class Controller extends BaseController
     protected function getRelation($uuid)
     {
         $query = [
-            'MATCH ()-[r{ uuid: {uuid} }]->()',
+            'MATCH ()-[r{ uuid: {uuid} }]-()',
             'RETURN r',
         ];
         $record = $this->client->run(implode(' ', $query), [
@@ -156,11 +156,27 @@ class Controller extends BaseController
         return $record->get('r');
     }
 
-    protected function getPathOfNode($uuid, $type)
+    protected function getPathOfNode($uuid, $type, $direction = 'OUTGOING')
     {
+        $left = '-';
+        $right = '->';
+        switch ($direction) {
+            case 'INCOMING':
+                $left = '<-';
+                $right = '-';
+            break;
+            case 'OUTGOING':
+                $left = '-';
+                $right = '->';
+            break;
+            case 'BOTH':
+                $left = '-';
+                $right = '-';
+            break;
+        }
         $query = [
-            "MATCH path=({ uuid: {uuid} })-[:$type*]->(n)",
-            "WHERE NOT (n)-[:$type]->()", // "n" must be top-level
+            'MATCH path=({ uuid: {uuid} })' . $left . "[:$type*]" . $right . '(n)',
+            'WHERE NOT (n)' . $left . "[:$type]" . $right . '()', // "n" must be top-level
             'RETURN NODES(path)',
         ];
         $record = $this->client->run(implode(' ', $query), [
@@ -177,10 +193,26 @@ class Controller extends BaseController
         return $result;
     }
 
-    protected function getTreeOfNode($uuid, $type)
+    protected function getTreeOfNode($uuid, $type, $direction = 'INCOMING')
     {
+        $left = '-';
+        $right = '->';
+        switch ($direction) {
+            case 'INCOMING':
+                $left = '<-';
+                $right = '-';
+            break;
+            case 'OUTGOING':
+                $left = '-';
+                $right = '->';
+            break;
+            case 'BOTH':
+                $left = '-';
+                $right = '-';
+            break;
+        }
         $query = [
-            "MATCH ({ uuid: {uuid} })<-[:$type]-(n)",
+            'MATCH ({ uuid: {uuid} })' . $left . "[:$type]" . $right . '(n)',
             'RETURN n',
         ];
         $records = $this->client->run(implode(' ', $query), [
@@ -203,10 +235,26 @@ class Controller extends BaseController
         return $result;
     }
 
-    protected function getRelations($fromUuid, $toUuid, $type)
+    protected function getRelations($fromUuid, $toUuid, $type, $direction = 'OUTGOING')
     {
+        $left = '-';
+        $right = '->';
+        switch ($direction) {
+            case 'INCOMING':
+                $left = '<-';
+                $right = '-';
+            break;
+            case 'OUTGOING':
+                $left = '-';
+                $right = '->';
+            break;
+            case 'BOTH':
+                $left = '-';
+                $right = '-';
+            break;
+        }
         $query = [
-            "MATCH (from{ uuid: {from_uuid} })-[r:$type]->(to{ uuid: {to_uuid} })",
+            'MATCH (from{ uuid: {from_uuid} })' . $left . "[r:$type]" . $right . '(to{ uuid: {to_uuid} })',
             'RETURN r',
         ];
         $records = $this->client->run(implode(' ', $query), [
@@ -259,7 +307,7 @@ class Controller extends BaseController
         }
         $info['uuid'] = $uuid;
         $query = [
-            'MATCH ()-[r{ uuid: {uuid} }]->()',
+            'MATCH ()-[r{ uuid: {uuid} }]-()',
             'SET ' . implode(', ', $validData),
         ];
         if (!empty($emptyData))
