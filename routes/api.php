@@ -34,6 +34,7 @@ Route::group([
     Route::delete('companies/{uuid}', 'CompanyController@destroy');
     Route::patch('companies/{uuid}', 'CompanyController@restore');
     Route::get('companies/{uuid}/departments', 'CompanyController@showDepartments');
+    Route::get('companies/{uuid}/users', 'CompanyController@showUsers');
 
     Route::get('departments', 'DepartmentController@index');
     Route::get('departments/{uuid}', 'DepartmentController@show');

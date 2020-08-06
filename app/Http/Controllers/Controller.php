@@ -175,14 +175,14 @@ class Controller extends BaseController
             break;
         }
         $query = [
-            'MATCH path=({ uuid: {uuid} })' . $left . "[:$type*]" . $right . '(n)',
+            'MATCH p=({ uuid: {uuid} })' . $left . "[:$type*]" . $right . '(n)',
             'WHERE NOT (n)' . $left . "[:$type]" . $right . '()', // "n" must be top-level
-            'RETURN NODES(path)',
+            'RETURN NODES(p)', // "p" means path
         ];
         $record = $this->client->run(implode(' ', $query), [
             'uuid' => $uuid,
         ])->getRecord();
-        $nodes = $record->get('NODES(path)');
+        $nodes = $record->get('NODES(p)');
         $result = [];
         foreach ($nodes as $node) {
             $result[] = [

@@ -119,4 +119,39 @@ class CompanyController extends Controller
     {
         return $this->getTreeOfNode($uuid, 'ASSIGNED_TO');
     }
+
+    public function showUsers($uuid)
+    {
+        // Get the departments of this company as list
+        $query = [
+            'MATCH (:Company{ uuid: {uuid} })<-[:ASSIGNED_TO*]-(d:Department)',
+            'RETURN DISTINCT d',
+        ];
+        $records = $this->client->run(implode(' ', $query), [
+            'uuid' => $uuid,
+        ])->getRecords();
+        $uuids = [];
+        foreach ($records as $record) {
+            $node = $record->get('d');
+            $uuid = $node->value('uuid');
+            $uuids[] = "'$uuid'";
+        }
+
+        // Get the users that works at these departments
+        $query = [
+            'MATCH (u:User)-[:WORKS_AT]->(d:Department)',
+            'WHERE d.uuid IN [' . implode(', ', $uuids) . ']',
+            'RETURN u',
+        ];
+        $records = $this->client->run(implode(' ', $query))->getRecords();
+        $result = [];
+        foreach ($records as $record) {
+            $node = $record->get('u');
+            $data = $node->values();
+            if (isset($data['password']))
+                unset($data['password']);
+            $result[] = $data;
+        }
+        return $result;
+    }
 }
