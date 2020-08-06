@@ -177,6 +177,32 @@ class Controller extends BaseController
         return $result;
     }
 
+    protected function getTreeOfNode($uuid, $type)
+    {
+        $query = [
+            "MATCH ({ uuid: {uuid} })<-[:$type]-(n)",
+            'RETURN n',
+        ];
+        $records = $this->client->run(implode(' ', $query), [
+            'uuid' => $uuid,
+        ])->getRecords();
+        if (empty($records))
+            return [];
+        $result = [];
+        foreach ($records as $record) {
+            $node = $record->get('n');
+            $item = [
+                'labels' => $node->labels(),
+                'values' => $node->values(),
+            ];
+            $subitems = $this->getTreeOfNode($item['values']['uuid'], $type);
+            if (!empty($subitems))
+                $item['children'] = $subitems;
+            $result[] = $item;
+        }
+        return $result;
+    }
+
     protected function getRelations($fromUuid, $toUuid, $type)
     {
         $query = [

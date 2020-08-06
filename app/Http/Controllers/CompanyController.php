@@ -114,4 +114,9 @@ class CompanyController extends Controller
         ]);
         return $node->values();
     }
+
+    public function showDepartments($uuid)
+    {
+        return $this->getTreeOfNode($uuid, 'ASSIGNED_TO');
+    }
 }

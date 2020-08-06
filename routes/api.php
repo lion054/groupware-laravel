@@ -33,6 +33,7 @@ Route::group([
     Route::put('companies/{uuid}', 'CompanyController@update');
     Route::delete('companies/{uuid}', 'CompanyController@destroy');
     Route::patch('companies/{uuid}', 'CompanyController@restore');
+    Route::get('companies/{uuid}/departments', 'CompanyController@showDepartments');
 
     Route::get('departments', 'DepartmentController@index');
     Route::get('departments/{uuid}', 'DepartmentController@show');
