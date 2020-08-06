@@ -37,7 +37,16 @@ class DepartmentController extends Controller
 
     public function show($uuid)
     {
-        return $this->getNode($uuid);
+        $node = $this->getNode($uuid);
+        if (!$node) {
+            return [
+                'success' => FALSE,
+                'error' => 'Not found that node',
+            ];
+        }
+        $result = $node->values();
+        $result['path'] = $this->getPathOfNode($uuid, 'ASSIGNED_TO');
+        return $result;
     }
 
     public function store(Request $request)

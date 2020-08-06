@@ -156,6 +156,27 @@ class Controller extends BaseController
         return $record->get('r');
     }
 
+    protected function getPathOfNode($uuid, $type)
+    {
+        $query = [
+            "MATCH path=({ uuid: {uuid} })-[:$type*]->(n)",
+            "WHERE NOT (n)-[:$type]->()", // "n" must be top-level
+            'RETURN NODES(path)',
+        ];
+        $record = $this->client->run(implode(' ', $query), [
+            'uuid' => $uuid,
+        ])->getRecord();
+        $nodes = $record->get('NODES(path)');
+        $result = [];
+        foreach ($nodes as $node) {
+            $result[] = [
+                'labels' => $node->labels(),
+                'values' => $node->values(),
+            ];
+        }
+        return $result;
+    }
+
     protected function getRelations($fromUuid, $toUuid, $type)
     {
         $query = [

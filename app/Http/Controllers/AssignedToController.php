@@ -15,12 +15,24 @@ class AssignedToController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'department_uuid' => 'required',
-            'company_uuid' => 'required',
+            'parent_uuid' => 'required',
         ]);
         $validator->setAttributeNames([
             'department_uuid' => 'Department UUID',
-            'company_uuid' => 'Company UUID',
+            'parent_uuid' => 'Parent UUID',
         ]);
+        $validator->after(function ($validator) use ($request) {
+            if (!$validator->errors()->has('department_uuid')) {
+                $department = $this->getNode($request->input('department_uuid'));
+                if ($department->label() != 'Department')
+                    $validator->errors()->add('department_uuid', 'The label from Department UUID must be Department');
+            }
+            if (!$validator->errors()->has('parent_uuid')) {
+                $parent = $this->getNode($request->input('parent_uuid'));
+                if ($parent->label() != 'Department' && $parent->label() != 'Company')
+                    $validator->errors()->add('parent_uuid', 'The label from Parent UUID must be Department or Company');
+            }
+        });
         if ($validator->fails()) {
             return [
                 'success' => FALSE,
@@ -28,7 +40,19 @@ class AssignedToController extends Controller
             ];
         }
 
-        $relation = $this->createRelation($request->input('user_uuid'), $request->input('department_uuid'), 'ASSIGNED_TO');
+        $department_uuid = $request->input('department_uuid');
+        $parent_uuid = $request->input('parent_uuid');
+        $nodes = $this->getPathOfNode($parent_uuid, 'ASSIGNED_TO');
+        foreach ($nodes as $node) {
+            if ($node['values']['uuid'] == $department_uuid) {
+                return [
+                    'success' => FALSE,
+                    'error' => 'Recursive relation among graph is not allowed',
+                ];
+            }
+        }
+
+        $relation = $this->createRelation($department_uuid, $parent_uuid, 'ASSIGNED_TO');
         return $relation->values();
     }
 

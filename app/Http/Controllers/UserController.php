@@ -42,7 +42,14 @@ class UserController extends Controller
 
     public function show($uuid)
     {
-        return $this->getNode($uuid);
+        $node = $this->getNode($uuid);
+        if (!$node) {
+            return [
+                'success' => FALSE,
+                'error' => 'Not found that node',
+            ];
+        }
+        return $node->values();
     }
 
     public function store(Request $request)
