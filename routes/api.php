@@ -40,6 +40,7 @@ Route::group([
     Route::put('departments/{uuid}', 'DepartmentController@update');
     Route::delete('departments/{uuid}', 'DepartmentController@destroy');
     Route::patch('departments/{uuid}', 'DepartmentController@restore');
+    Route::get('departments/{uuid}/users', 'DepartmentController@showUsers');
 
     Route::get('assigned_to/{uuid}', 'AssignedToController@show');
     Route::post('assigned_to', 'AssignedToController@store');

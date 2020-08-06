@@ -108,4 +108,24 @@ class DepartmentController extends Controller
         ]);
         return $node->values();
     }
+
+    public function showUsers($uuid)
+    {
+        $query = [
+            'MATCH (d:Department{ uuid: {uuid} })<-[r:WORKS_AT]-(u:User)',
+            'RETURN u',
+        ];
+        $records = $this->client->run(implode(' ', $query), [
+            'uuid' => $uuid,
+        ])->getRecords();
+        $result = [];
+        foreach ($records as $record) {
+            $user = $record->get('u');
+            $data = $user->values();
+            if (isset($data['password']))
+                unset($data['password']);
+            $result[] = $data;
+        }
+        return $result;
+    }
 }
