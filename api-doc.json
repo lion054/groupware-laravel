@@ -1,0 +1,606 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This API is RESTful API that supports the web",
+    "version": "0.0.1-SNAPSHOT",
+    "title": "Groupware RESTful API",
+    "contact": {
+      "name": "Somnath Musib",
+      "url": "http://medium.com/codefountain",
+      "email": "codefountain@gmail.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:9090",
+  "basePath": "/api/mobile",
+  "tags": [
+    {
+      "name": "auth-controller",
+      "description": "Manage the authorization"
+    },
+    {
+      "name": "media-controller",
+      "description": "Manage the image process"
+    },
+    {
+      "name": "company-controller",
+      "description": "Manage the Company node"
+    },
+    {
+      "name": "department-controller",
+      "description": "Manage the Department node"
+    },
+    {
+      "name": "user-controller",
+      "description": "Manage the User node"
+    },
+    {
+      "name": "assigned-to-controller",
+      "description": "Manage the AssignedTo relation"
+    },
+    {
+      "name": "works-at-controller",
+      "description": "Manage the WorksAt relation"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "summary": "The new user is registered by oneself.",
+        "description": "",
+        "consumes": [
+          "application/x-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "avatar",
+            "description": "The picture of registered user",
+            "required": true,
+            "type": "file"
+          },
+          {
+            "in": "formData",
+            "name": "name",
+            "description": "The full name of registered user",
+            "required": true,
+            "type": "string",
+            "minimum": 191
+          },
+          {
+            "in": "formData",
+            "name": "email",
+            "description": "The email address of registered user",
+            "required": true,
+            "type": "string",
+            "format": "email"
+          },
+          {
+            "in": "formData",
+            "name": "phone_number",
+            "description": "The phone number of registered user",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "in": "formData",
+            "name": "password",
+            "description": "The password of registered user",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "formData",
+            "name": "password_confirmation",
+            "description": "The password confirmation of registered user",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK. The registered user will get 'Traveler' role. Return the profile of registered user, excluding password.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "avatar": {
+                  "description": "The storage path of registerd user's avatar",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "The full name of registered user",
+                  "type": "string"
+                },
+                "email": {
+                  "description": "The email address of registered user",
+                  "type": "string",
+                  "format": "email"
+                },
+                "phone_number": {
+                  "description": "The phone number of registered user",
+                  "type": "string",
+                  "format": "number"
+                }
+              }
+            },
+            "examples": {
+              "application/json": {
+                "avatar": "/app/users/652458795613/avatar.jpg",
+                "name": "John Smith",
+                "email": "john.smith@gmail.com",
+                "country_code": "ZM",
+                "dial_code": "263",
+                "phone_number": "092162159751"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify": {
+      "get": {
+        "tags": [
+          "auth-controller"
+        ],
+        "summary": "Verify the user's token.",
+        "description": "The user can press F5 key repeatedly, so this API must be not protected by throttle.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK. Return the authorized user's profile.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "avatar": {
+                  "description": "The storage path of registerd user's avatar",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "The full name of registered user",
+                  "type": "string"
+                },
+                "email": {
+                  "description": "The email address of registered user",
+                  "type": "string",
+                  "format": "email"
+                },
+                "phone_number": {
+                  "description": "The phone number of registered user",
+                  "type": "string",
+                  "format": "number"
+                }
+              }
+            },
+            "examples": {
+              "application/json": {
+                "avatar": "/app/users/652458795613/avatar.jpg",
+                "name": "John Smith",
+                "email": "john.smith@gmail.com",
+                "phone_number": "092162159751"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media": {
+      "post": {
+        "tags": [
+          "media-controller"
+        ],
+        "summary": "Upload the image file.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/media/{key}": {
+      "get": {
+        "tags": [
+          "media-controller"
+        ],
+        "summary": "Read the image file from server.",
+        "description": "Convert the 'key' param to storage path.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/companies": {
+      "get": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "List all companies.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "Create new company.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/companies/{id}": {
+      "get": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "Read the company with id",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "Change the company with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "Delete or trash the company with id.",
+        "description": "On delete, remove all relations related to it.\nOn trash, all relations related to it will be kept.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "Restore the trashed company with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/companies/{id}/departments": {
+      "get": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "List the departments assigned to company with id.",
+        "description": "Filter the departments that have AssignedTo relation with company.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/companies/{id}/users": {
+      "get": {
+        "tags": [
+          "company-controller"
+        ],
+        "summary": "List the users that work at company with id.",
+        "description": "Filter the departments that have AssignedTo relation with company.\nFilter the users that have WorksAt relation with those departments.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/departments": {
+      "get": {
+        "tags": [
+          "department-controller"
+        ],
+        "summary": "List all departments.",
+        "description": "This API lists the departments without the specific company.\nIn order to list the departments with specific company, call '/companies/{id}/departments' API.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "department-controller"
+        ],
+        "summary": "Create new department.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/departments/{id}": {
+      "get": {
+        "tags": [
+          "department-controller"
+        ],
+        "summary": "Read the department with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "department-controller"
+        ],
+        "summary": "Change the department with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "department-controller"
+        ],
+        "summary": "Delete or trash the department with id.",
+        "description": "On delete, remove all relations related to it.\nOn trash, all relations related to it will be kept.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "department-controller"
+        ],
+        "summary": "Restore the trashed department with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/departments/{id}/users": {
+      "get": {
+        "tags": [
+          "department-controller"
+        ],
+        "summary": "List the users that work at department with id.",
+        "description": "Filter the users that have WorksAt relation with the department.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/assigned_to": {
+      "post": {
+        "tags": [
+          "assigned-to-controller"
+        ],
+        "summary": "Create new AssignedTo relation.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/assigned_to/{id}": {
+      "get": {
+        "tags": [
+          "assigned-to-controller"
+        ],
+        "summary": "Read the AssignedTo relation with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "assigned-to-controller"
+        ],
+        "summary": "Delete the AssignedTo relation with id.",
+        "description": "On delete, remove all relations related to it.\nOn trash, all relations related to it will be kept.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/works_at": {
+      "get": {
+        "tags": [
+          "works-at-controller"
+        ],
+        "summary": "List all WorksAt relations.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "works-at-controller"
+        ],
+        "summary": "Create new WorksAt relation.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/works_at/{id}": {
+      "get": {
+        "tags": [
+          "works-at-controller"
+        ],
+        "summary": "Read the WorksAt relation with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "works-at-controller"
+        ],
+        "summary": "Change the WorksAt relation with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "works-at-controller"
+        ],
+        "summary": "Delete the WorksAt relation with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "List all users.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "Create new user.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "Read the user with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "Change the user with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "Delete or trash the user with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "user-controller"
+        ],
+        "summary": "Restore the trashed user with id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}
