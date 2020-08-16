@@ -14,8 +14,8 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     }
   },
-  "host": "localhost:9090",
-  "basePath": "/api/mobile",
+  "host": "localhost:9091",
+  "basePath": "/api",
   "tags": [
     {
       "name": "auth-controller",
@@ -27,23 +27,23 @@
     },
     {
       "name": "company-controller",
-      "description": "Manage the Company node"
+      "description": "Manage the Company node. The soft-delete is required."
     },
     {
       "name": "department-controller",
-      "description": "Manage the Department node"
+      "description": "Manage the Department node. The soft-delete is required."
     },
     {
       "name": "user-controller",
-      "description": "Manage the User node"
+      "description": "Manage the User node. The soft-delete is required."
     },
     {
-      "name": "assigned-to-controller",
-      "description": "Manage the AssignedTo relation"
+      "name": "belong-to-controller",
+      "description": "Manage the BelongTo relation between Company node and Department node"
     },
     {
-      "name": "works-at-controller",
-      "description": "Manage the WorksAt relation"
+      "name": "work-at-controller",
+      "description": "Manage the WorkAt relation between Department node and User node"
     }
   ],
   "paths": {
@@ -108,7 +108,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK. The registered user will get 'Traveler' role. Return the profile of registered user, excluding password.",
+            "description": "OK. Return the profile of registered user, excluding password.",
             "schema": {
               "type": "object",
               "properties": {
@@ -137,9 +137,98 @@
                 "avatar": "/app/users/652458795613/avatar.jpg",
                 "name": "John Smith",
                 "email": "john.smith@gmail.com",
-                "country_code": "ZM",
-                "dial_code": "263",
                 "phone_number": "092162159751"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login_with_email_password": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "summary": "Login with email address and password.",
+        "description": "",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "email",
+            "description": "The email address of registered user",
+            "required": true,
+            "type": "string",
+            "format": "email"
+          },
+          {
+            "in": "formData",
+            "name": "password",
+            "description": "The password of registered user",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK. Return the profile of registered user, excluding password.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "expires": {
+                  "description": "The period that the token is expired",
+                  "type": "number"
+                },
+                "token": {
+                  "description": "The JWT token",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "The token type",
+                  "type": "string"
+                },
+                "user": {
+                  "description": "The user profile",
+                  "type": "object",
+                  "properties": {
+                    "avatar": {
+                      "description": "The storage path of registerd user's avatar",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "The full name of registered user",
+                      "type": "string"
+                    },
+                    "email": {
+                      "description": "The email address of registered user",
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "phone_number": {
+                      "description": "The phone number of registered user",
+                      "type": "string",
+                      "format": "number"
+                    }
+                  }
+                }
+              }
+            },
+            "examples": {
+              "application/json": {
+                "expires": 10800,
+                "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3Q6OTA5MVwvYXBpXC9hdXRoXC9sb2dpbl93aXRoX2VtYWlsX3Bhc3N3b3JkIiwiaWF0IjoxNTk3NTkwMDcyLCJleHAiOjE1OTc1OTAwNzIzOTksIm5iZiI6MTU5NzU5MDA3MiwianRpIjoiTUlPTTY0Z2RIRDM3R1M1QiIsInN1YiI6MywicHJ2IjoiODdlMGFmMWVmOWZkMTU4MTJmZGVjOTcxNTNhMTRlMGIwNDc1NDZhYSJ9.B6-QmnIfX57rhK7F2VNUbHPAoqdatTOjGbvgejhKLkU",
+                "type": "bearer",
+                "user": {
+                  "avatar": "/app/users/652458795613/avatar.jpg",
+                  "name": "John Smith",
+                  "email": "john.smith@gmail.com",
+                  "phone_number": "092162159751"
+                }
               }
             }
           }
@@ -303,8 +392,8 @@
         "tags": [
           "company-controller"
         ],
-        "summary": "List the departments assigned to company with id.",
-        "description": "Filter the departments that have AssignedTo relation with company.",
+        "summary": "List the departments belong to company with id.",
+        "description": "Filter the departments that have BelongTo relation with company.",
         "parameters": [],
         "responses": {
           "200": {
@@ -319,7 +408,7 @@
           "company-controller"
         ],
         "summary": "List the users that work at company with id.",
-        "description": "Filter the departments that have AssignedTo relation with company.\nFilter the users that have WorksAt relation with those departments.",
+        "description": "Filter the departments that have BelongTo relation with company.\nFilter the users that have WorkAt relation with those departments.",
         "parameters": [],
         "responses": {
           "200": {
@@ -412,7 +501,7 @@
           "department-controller"
         ],
         "summary": "List the users that work at department with id.",
-        "description": "Filter the users that have WorksAt relation with the department.",
+        "description": "Filter the users that have WorkAt relation with the department.",
         "parameters": [],
         "responses": {
           "200": {
@@ -421,12 +510,12 @@
         }
       }
     },
-    "/assigned_to": {
+    "/belong_to": {
       "post": {
         "tags": [
-          "assigned-to-controller"
+          "belong-to-controller"
         ],
-        "summary": "Create new AssignedTo relation.",
+        "summary": "Create new BelongTo relation.",
         "parameters": [],
         "responses": {
           "200": {
@@ -435,12 +524,12 @@
         }
       }
     },
-    "/assigned_to/{id}": {
+    "/belong_to/{id}": {
       "get": {
         "tags": [
-          "assigned-to-controller"
+          "belong-to-controller"
         ],
-        "summary": "Read the AssignedTo relation with id.",
+        "summary": "Read the BelongTo relation with id.",
         "parameters": [],
         "responses": {
           "200": {
@@ -450,9 +539,9 @@
       },
       "delete": {
         "tags": [
-          "assigned-to-controller"
+          "belong-to-controller"
         ],
-        "summary": "Delete the AssignedTo relation with id.",
+        "summary": "Delete the BelongTo relation with id.",
         "description": "On delete, remove all relations related to it.\nOn trash, all relations related to it will be kept.",
         "parameters": [],
         "responses": {
@@ -462,12 +551,12 @@
         }
       }
     },
-    "/works_at": {
+    "/work_at": {
       "get": {
         "tags": [
-          "works-at-controller"
+          "work-at-controller"
         ],
-        "summary": "List all WorksAt relations.",
+        "summary": "List all WorkAt relations.",
         "parameters": [],
         "responses": {
           "200": {
@@ -477,9 +566,9 @@
       },
       "post": {
         "tags": [
-          "works-at-controller"
+          "work-at-controller"
         ],
-        "summary": "Create new WorksAt relation.",
+        "summary": "Create new WorkAt relation.",
         "parameters": [],
         "responses": {
           "200": {
@@ -488,12 +577,12 @@
         }
       }
     },
-    "/works_at/{id}": {
+    "/work_at/{id}": {
       "get": {
         "tags": [
-          "works-at-controller"
+          "work-at-controller"
         ],
-        "summary": "Read the WorksAt relation with id.",
+        "summary": "Read the WorkAt relation with id.",
         "parameters": [],
         "responses": {
           "200": {
@@ -503,9 +592,9 @@
       },
       "put": {
         "tags": [
-          "works-at-controller"
+          "work-at-controller"
         ],
-        "summary": "Change the WorksAt relation with id.",
+        "summary": "Change the WorkAt relation with id.",
         "parameters": [],
         "responses": {
           "200": {
@@ -515,9 +604,9 @@
       },
       "delete": {
         "tags": [
-          "works-at-controller"
+          "work-at-controller"
         ],
-        "summary": "Delete the WorksAt relation with id.",
+        "summary": "Delete the WorkAt relation with id.",
         "parameters": [],
         "responses": {
           "200": {
