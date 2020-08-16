@@ -45,9 +45,9 @@ Route::group([
     Route::patch('departments/{uuid}', 'DepartmentController@restore');
     Route::get('departments/{uuid}/users', 'DepartmentController@showUsers');
 
-    Route::get('assigned_to/{uuid}', 'AssignedToController@show');
-    Route::post('assigned_to', 'AssignedToController@store');
-    Route::delete('assigned_to/{uuid}', 'AssignedToController@destroy');
+    Route::get('belong_to/{uuid}', 'BelongToController@show');
+    Route::post('belong_to', 'BelongToController@store');
+    Route::delete('belong_to/{uuid}', 'BelongToController@destroy');
 
     Route::get('users', 'UserController@index');
     Route::get('users/{uuid}', 'UserController@show');
@@ -56,9 +56,9 @@ Route::group([
     Route::delete('users/{uuid}', 'UserController@destroy');
     Route::patch('users/{uuid}', 'UserController@restore');
 
-    Route::get('works_at', 'WorksAtController@index');
-    Route::get('works_at/{uuid}', 'WorksAtController@show');
-    Route::post('works_at', 'WorksAtController@store');
-    Route::put('works_at/{uuid}', 'WorksAtController@update');
-    Route::delete('works_at/{uuid}', 'WorksAtController@destroy');
+    Route::get('work_at', 'WorkAtController@index');
+    Route::get('work_at/{uuid}', 'WorkAtController@show');
+    Route::post('work_at', 'WorkAtController@store');
+    Route::put('work_at/{uuid}', 'WorkAtController@update');
+    Route::delete('work_at/{uuid}', 'WorkAtController@destroy');
 });

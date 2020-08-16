@@ -45,7 +45,7 @@ class DepartmentController extends Controller
             ];
         }
         $result = $node->values();
-        $result['path'] = $this->getPathOfNode($uuid, 'ASSIGNED_TO');
+        $result['path'] = $this->getPathOfNode($uuid, 'BELONG_TO');
         return $result;
     }
 
@@ -121,7 +121,7 @@ class DepartmentController extends Controller
     public function showUsers($uuid)
     {
         $query = [
-            'MATCH (d:Department{ uuid: {uuid} })<-[r:WORKS_AT]-(u:User)',
+            'MATCH (d:Department{ uuid: {uuid} })<-[r:WORK_AT]-(u:User)',
             'RETURN u',
         ];
         $records = $this->client->run(implode(' ', $query), [

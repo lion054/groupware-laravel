@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class WorksAtController extends Controller
+class WorkAtController extends Controller
 {
     public function index(Request $request)
     {
@@ -26,7 +26,7 @@ class WorksAtController extends Controller
         $limit = $request->query('limit');
 
         $query = [
-            "MATCH (from:User{ uuid: {from_uuid} })-[r:WORKS_AT]->(to:Department)",
+            "MATCH (from:User{ uuid: {from_uuid} })-[r:WORK_AT]->(to:Department)",
             'RETURN r',
         ];
         $records = $this->client->run(implode(' ', $query), [
@@ -66,7 +66,7 @@ class WorksAtController extends Controller
         }
 
         $data = $request->only(['role', 'took_at', 'left_at']);
-        $relation = $this->createRelation($request->input('user_uuid'), $request->input('department_uuid'), 'WORKS_AT', $data);
+        $relation = $this->createRelation($request->input('user_uuid'), $request->input('department_uuid'), 'WORK_AT', $data);
         return $relation->values();
     }
 

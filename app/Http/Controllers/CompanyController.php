@@ -117,14 +117,14 @@ class CompanyController extends Controller
 
     public function showDepartments($uuid)
     {
-        return $this->getTreeOfNode($uuid, 'ASSIGNED_TO');
+        return $this->getTreeOfNode($uuid, 'BELONG_TO');
     }
 
     public function showUsers($uuid)
     {
         // Get the departments of this company as list
         $query = [
-            'MATCH (:Company{ uuid: {uuid} })<-[:ASSIGNED_TO*]-(d:Department)',
+            'MATCH (:Company{ uuid: {uuid} })<-[:BELONG_TO*]-(d:Department)',
             'RETURN DISTINCT d',
         ];
         $records = $this->client->run(implode(' ', $query), [
@@ -139,7 +139,7 @@ class CompanyController extends Controller
 
         // Get the users that works at these departments
         $query = [
-            'MATCH (u:User)-[:WORKS_AT]->(d:Department)',
+            'MATCH (u:User)-[:WORK_AT]->(d:Department)',
             'WHERE d.uuid IN [' . implode(', ', $uuids) . ']',
             'RETURN u',
         ];

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class AssignedToController extends Controller
+class BelongToController extends Controller
 {
     public function show($uuid)
     {
@@ -42,7 +42,7 @@ class AssignedToController extends Controller
 
         $department_uuid = $request->input('department_uuid');
         $parent_uuid = $request->input('parent_uuid');
-        $nodes = $this->getPathOfNode($parent_uuid, 'ASSIGNED_TO');
+        $nodes = $this->getPathOfNode($parent_uuid, 'BELONG_TO');
         foreach ($nodes as $node) {
             if ($node['values']['uuid'] == $department_uuid) {
                 return [
@@ -52,7 +52,7 @@ class AssignedToController extends Controller
             }
         }
 
-        $relation = $this->createRelation($department_uuid, $parent_uuid, 'ASSIGNED_TO');
+        $relation = $this->createRelation($department_uuid, $parent_uuid, 'BELONG_TO');
         return $relation->values();
     }
 
