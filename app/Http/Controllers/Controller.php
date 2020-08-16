@@ -276,7 +276,7 @@ class Controller extends BaseController
             if (empty($value))
                 $invalidKeys[] = "n.$key";
             else {
-                $validData[] = "n.$key = {$key}";
+                $validData[] = "n.$key = {" . $key . '}';
                 $info[$key] = $value;
             }
         }
