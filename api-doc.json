@@ -552,18 +552,6 @@
       }
     },
     "/work_at": {
-      "get": {
-        "tags": [
-          "work-at-controller"
-        ],
-        "summary": "List all WorkAt relations.",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      },
       "post": {
         "tags": [
           "work-at-controller"
