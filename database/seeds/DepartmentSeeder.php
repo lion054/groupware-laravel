@@ -1,6 +1,6 @@
 <?php
 
-class DepartmentSeeder extends NeoSeeder
+class DepartmentSeeder extends BaseSeeder
 {
     /**
      * Run the database seeds.

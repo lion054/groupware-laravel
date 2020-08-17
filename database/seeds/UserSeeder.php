@@ -1,6 +1,8 @@
 <?php
 
-class UserSeeder extends NeoSeeder
+use Illuminate\Support\Facades\Storage;
+
+class UserSeeder extends BaseSeeder
 {
     /**
      * Run the database seeds.
@@ -10,6 +12,8 @@ class UserSeeder extends NeoSeeder
     public function run()
     {
         // Let's truncate our existing records to start from scratch.
+        Storage::disk('local')->deleteDirectory('users');
+
         $query = [
             'MATCH (u:User)',
             'DETACH DELETE u',
@@ -26,12 +30,18 @@ class UserSeeder extends NeoSeeder
         // And now, let's create a few users in our database:
         foreach ($result->getRecords() as $record) {
             $department = $record->get('d');
-            $count = $faker->numberBetween(5, 10);
+            $count = $faker->numberBetween(3, 5);
             for ($i = 0; $i < $count; $i++) {
                 $user = $this->createNode('User', [
                     'name' => $faker->name,
                     'email' => $faker->email,
                     'password' => Hash::make('123456'),
+                ]);
+                do {
+                    $avatar = $this->downloadFace('https://thispersondoesnotexist.com/image', $user->uuid);
+                } while ($avatar === FALSE);
+                $this->updateNode($user->uuid, [
+                    'avatar' => $avatar,
                 ]);
                 $this->createRelation($user->value('uuid'), $department->value('uuid'), 'WORK_AT', [
                     'role' => $faker->boolean ? 'Master' : 'Engineer',
