@@ -19,6 +19,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::get('auth/verify', 'AuthController@verify'); // The user can press F5 repeatedly, so remove throttle from this
 
+Route::post('media', 'MediaController@store');
+Route::get('media/{key}', 'MediaController@show');
+
 Route::group([
     'middleware' => 'throttle:10,1', // The user can call auth APIs up to 10 times in every a minute
 ], function () {
