@@ -53,7 +53,7 @@ class WorkAtSeeder extends BaseSeeder
                 ];
                 if ($i == $history - 1) // The current job doesn't contain 'left_at'
                     unset($data['left_at']);
-                $this->createRelation($userUuid, $departmentUuid, 'WORK_AT', );
+                $this->createRelation($userUuid, $departmentUuid, 'WORK_AT', $data);
             }
         }
     }
