@@ -4,9 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-
-use App\Http\Requests\CustomRequest;
 
 class UserController extends Controller
 {
@@ -14,14 +13,26 @@ class UserController extends Controller
     {
         $company_uuid = $request->query('company_uuid');
         $department_uuid = $request->query('department_uuid');
+        $job_visible = $request->boolean('job_visible');
         $search = $request->query('search');
         $sort_by = $request->query('sort_by');
         $limit = $request->query('limit');
 
-        $query = ['MATCH (u:User)'];
+        $query = [];
+        $conditions = [];
+        if ($job_visible) {
+            $query[] = 'MATCH p=(u:User)-[r:WORK_AT]->(:Department)-[:BELONG_TO*]->(n)';
+            $conditions = [
+                'NOT EXISTS (r.left_at)',
+                'NOT (n)-[:BELONG_TO]->()', // "n" must be top-level
+            ];
+        } else
+            $query[] = 'MATCH p=(u:User)';
         if (!empty($search))
-            $query[] = 'WHERE u.name CONTAINS {search}';
-        $query[] = 'RETURN u';
+            $conditions[] = 'u.name CONTAINS {search}';
+        if (!empty($conditions))
+            $query[] = 'WHERE ' . implode(' AND ', $conditions);
+        $query[] = 'RETURN NODES(p)'; // "p" means path
         if (!empty($limit))
             $query[] = 'LIMIT {limit}';
 
@@ -30,12 +41,40 @@ class UserController extends Controller
             'limit' => intval($limit),
         ])->getRecords();
         $result = [];
+
         foreach ($records as $record) {
-            $user = $record->get('u');
-            $data = $user->values();
-            if (isset($data['password']))
-                unset($data['password']);
-            $result[] = $data;
+            $nodes = $record->get('NODES(p)');
+            $user = [];
+            $department = [];
+            $company = [];
+            foreach ($nodes as $node) {
+                $labels = $node->labels();
+                $values = $node->values();
+                if (in_array('User', $labels)) {
+                    if (isset($values['password']))
+                        unset($values['password']);
+                    $user = $values;
+                } else if (in_array('Department', $labels)) {
+                    if (empty($department))
+                        $department = $values;
+                    else {
+                        $values['child'] = $department;
+                        $department = $values;
+                    }
+                } else if (in_array('Company', $labels)) {
+                    if (empty($company))
+                        $company = $values;
+                    else {
+                        $values['child'] = $company;
+                        $company = $values;
+                    }
+                }
+            }
+            if ($job_visible) {
+                $user['department'] = $department;
+                $user['company'] = $company;
+            }
+            $result[] = $user;
         }
         return $result;
     }
@@ -49,7 +88,10 @@ class UserController extends Controller
                 'error' => 'Not found that node',
             ];
         }
-        return $node->values();
+        $data = $node->values();
+        if (isset($data['password']))
+            unset($data['password']);
+        return $data;
     }
 
     public function store(Request $request)
@@ -102,7 +144,10 @@ class UserController extends Controller
             $node = $this->getNode($uuid);
         else
             $node = $this->updaetNode($uuid, $data);
-        return $node->values();
+        $data = $node->values();
+        if (isset($data['password']))
+            unset($data['password']);
+        return $data;
     }
 
     public function destroy(CustomRequest $request, $uuid)
