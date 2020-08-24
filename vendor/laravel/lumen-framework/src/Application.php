@@ -147,7 +147,7 @@ class Application extends Container
      */
     public function environment()
     {
-        $env = env('APP_ENV', config('app.env', 'production'));
+        $env = env('APP_ENV', 'production');
 
         if (func_num_args() > 0) {
             $patterns = is_array(func_get_arg(0)) ? func_get_arg(0) : func_get_args();
