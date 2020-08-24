@@ -1,55 +1,21 @@
-# The App Logic
+# Lumen PHP Framework
 
-## The Nodes
+[![Build Status](https://travis-ci.org/laravel/lumen-framework.svg)](https://travis-ci.org/laravel/lumen-framework)
+[![Total Downloads](https://poser.pugx.org/laravel/lumen-framework/d/total.svg)](https://packagist.org/packages/laravel/lumen-framework)
+[![Latest Stable Version](https://poser.pugx.org/laravel/lumen-framework/v/stable.svg)](https://packagist.org/packages/laravel/lumen-framework)
+[![Latest Unstable Version](https://poser.pugx.org/laravel/lumen-framework/v/unstable.svg)](https://packagist.org/packages/laravel/lumen-framework)
+[![License](https://poser.pugx.org/laravel/lumen-framework/license.svg)](https://packagist.org/packages/laravel/lumen-framework)
 
-### User
+Laravel Lumen is a stunningly fast PHP micro-framework for building web applications with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Lumen attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as routing, database abstraction, queueing, and caching.
 
-Attribute: name, email, password, etc.
-Related to: Company (n:1), Department (m:n).
+## Official Documentation
 
-### Company
+Documentation for the framework can be found on the [Lumen website](http://lumen.laravel.com/docs).
 
-Attribute: name, since, etc.
-Related to: Team (1:n), User (1:n).
+## Security Vulnerabilities
 
-### Department
+If you discover a security vulnerability within Lumen, please send an e-mail to Taylor Otwell at taylor@laravel.com. All security vulnerabilities will be promptly addressed.
 
-Attribute: name, capacity, etc.
-Related to: Company (n:1), User (m:n).
+## License
 
-## The Edges
-
-### User-Department
-
-Attribute: position, took_at, left_at, etc.
-The user can have more than one position for its department.
-This means multiple edges can exist between user and department.
-
-# The App Structure
-
-## Neo4j
-
-Database is Neo4j that represents the graph data.
-All groupware projects need group management and permission process thereof.
-
-## Laravel 5.6
-
-This API server uses "vinelab/neoeloquent" to access the Neo4j database.
-NeoEloquent is supported in Laravel 5.6.
-
-### Why NeoEloquent?
-
-NeoEloquent is a knid of Eloquent, so it is suitable for dealing with JWT token and verification thereof.
-NeoEloquent contains many miscellaneous classes, so it is more heavy than "GraphAware Neo4j PHP Client".
-And it is not obvious for making relationship between nodes.
-So NeoEloquent will be used as User class for JWT token.
-It is so hard to create the alternative to User class for verification of JWT auth by oneself.
-So I will use JWT auth as is. And I will use NeoEloquent for User class, as JWT auth needs the Eloquent. But I will use neo4j-php-client not NeoEloquent in general cases, as neo4j-php-client is lighter than NeoEloquent.
-
-## Customization of Laravel 5.6
-
-### Retrieving Boolean Input Values
-
-The disadvantage of Laravel 5.6 is that it doesn't support "retrieving Boolean Input Values" for request.
-But it was solved since Laravel 6.x.
-This will be fixed by adding customized Reqeust class.
+The Lumen framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
