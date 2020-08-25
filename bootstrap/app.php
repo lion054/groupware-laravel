@@ -91,6 +91,7 @@ $app->middleware([
 |
 */
 
+$app->register(Intervention\Image\ImageServiceProvider::class);
 $app->register(Nord\Lumen\Cors\CorsServiceProvider::class);
 
 /*
