@@ -3,12 +3,13 @@
 namespace Laravel\Lumen\Routing;
 
 use Closure as BaseClosure;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Validator;
 use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
 
 trait ProvidesConvenienceMethods
 {
@@ -135,7 +136,7 @@ trait ProvidesConvenienceMethods
      */
     public function authorize($ability, $arguments = [])
     {
-        list($ability, $arguments) = $this->parseAbilityAndArguments($ability, $arguments);
+        [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
 
         return app(Gate::class)->authorize($ability, $arguments);
     }
@@ -152,7 +153,7 @@ trait ProvidesConvenienceMethods
      */
     public function authorizeForUser($user, $ability, $arguments = [])
     {
-        list($ability, $arguments) = $this->parseAbilityAndArguments($ability, $arguments);
+        [$ability, $arguments] = $this->parseAbilityAndArguments($ability, $arguments);
 
         return app(Gate::class)->forUser($user)->authorize($ability, $arguments);
     }
@@ -181,7 +182,7 @@ trait ProvidesConvenienceMethods
      */
     public function dispatch($job)
     {
-        return app('Illuminate\Contracts\Bus\Dispatcher')->dispatch($job);
+        return app(Dispatcher::class)->dispatch($job);
     }
 
     /**
@@ -193,7 +194,7 @@ trait ProvidesConvenienceMethods
      */
     public function dispatchNow($job, $handler = null)
     {
-        return app('Illuminate\Contracts\Bus\Dispatcher')->dispatchNow($job, $handler);
+        return app(Dispatcher::class)->dispatchNow($job, $handler);
     }
 
     /**

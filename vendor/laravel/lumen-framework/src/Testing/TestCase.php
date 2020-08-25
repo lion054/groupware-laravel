@@ -2,10 +2,11 @@
 
 namespace Laravel\Lumen\Testing;
 
-use Mockery;
 use Exception;
-use Illuminate\Support\Facades\Facade;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Facade;
+use Mockery;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -49,11 +50,15 @@ abstract class TestCase extends BaseTestCase
      */
     protected function refreshApplication()
     {
-        putenv('APP_ENV=testing');
-
         Facade::clearResolvedInstances();
 
         $this->app = $this->createApplication();
+
+        $url = $this->app->make('config')->get('app.url', 'http://localhost');
+
+        $this->app->make('url')->forceRootUrl($url);
+
+        $this->app->boot();
     }
 
     /**
@@ -61,7 +66,7 @@ abstract class TestCase extends BaseTestCase
      *
      * @return void
      */
-    public function setUp()
+    protected function setUp(): void
     {
         if (! $this->app) {
             $this->refreshApplication();
@@ -101,10 +106,10 @@ abstract class TestCase extends BaseTestCase
      *
      * @return void
      */
-    public function tearDown()
+    protected function tearDown(): void
     {
         if (class_exists('Mockery')) {
-            if (($container = \Mockery::getContainer()) !== null) {
+            if (($container = Mockery::getContainer()) !== null) {
                 $this->addToAssertionCount($container->mockery_getExpectationCount());
             }
 
@@ -184,9 +189,9 @@ abstract class TestCase extends BaseTestCase
     {
         $events = is_array($events) ? $events : func_get_args();
 
-        $mock = Mockery::spy('Illuminate\Contracts\Events\Dispatcher');
+        $mock = Mockery::spy(\Illuminate\Contracts\Events\Dispatcher::class);
 
-        $mock->shouldReceive('fire', 'dispatch')->andReturnUsing(function ($called) use (&$events) {
+        $mock->shouldReceive('dispatch')->andReturnUsing(function ($called) use (&$events) {
             foreach ($events as $key => $event) {
                 if ((is_string($called) && $called === $event) ||
                     (is_string($called) && is_subclass_of($called, $event)) ||
@@ -216,9 +221,9 @@ abstract class TestCase extends BaseTestCase
      */
     protected function withoutEvents()
     {
-        $mock = Mockery::mock('Illuminate\Contracts\Events\Dispatcher');
+        $mock = Mockery::mock(\Illuminate\Contracts\Events\Dispatcher::class);
 
-        $mock->shouldReceive('fire', 'dispatch');
+        $mock->shouldReceive('dispatch');
 
         $this->app->instance('events', $mock);
 
@@ -237,8 +242,6 @@ abstract class TestCase extends BaseTestCase
     {
         $jobs = is_array($jobs) ? $jobs : func_get_args();
 
-        unset($this->app->availableBindings['Illuminate\Contracts\Bus\Dispatcher']);
-
         $mock = Mockery::mock('Illuminate\Bus\Dispatcher[dispatch]', [$this->app]);
 
         foreach ($jobs as $job) {
@@ -247,7 +250,7 @@ abstract class TestCase extends BaseTestCase
         }
 
         $this->app->instance(
-            'Illuminate\Contracts\Bus\Dispatcher', $mock
+            \Illuminate\Contracts\Bus\Dispatcher::class, $mock
         );
 
         return $this;
@@ -260,8 +263,6 @@ abstract class TestCase extends BaseTestCase
      */
     protected function withoutJobs()
     {
-        unset($this->app->availableBindings['Illuminate\Contracts\Bus\Dispatcher']);
-
         $mock = Mockery::mock('Illuminate\Bus\Dispatcher[dispatch]', [$this->app]);
 
         $mock->shouldReceive('dispatch')->andReturnUsing(function ($dispatched) {
@@ -269,7 +270,7 @@ abstract class TestCase extends BaseTestCase
         });
 
         $this->app->instance(
-            'Illuminate\Contracts\Bus\Dispatcher', $mock
+            \Illuminate\Contracts\Bus\Dispatcher::class, $mock
         );
 
         return $this;
@@ -304,13 +305,13 @@ abstract class TestCase extends BaseTestCase
     /**
      * Call artisan command and return code.
      *
-     * @param string  $command
-     * @param array   $parameters
+     * @param  string  $command
+     * @param  array  $parameters
      * @return int
      */
     public function artisan($command, $parameters = [])
     {
-        return $this->code = $this->app['Illuminate\Contracts\Console\Kernel']->call($command, $parameters);
+        return $this->code = $this->app[Kernel::class]->call($command, $parameters);
     }
 
     /**

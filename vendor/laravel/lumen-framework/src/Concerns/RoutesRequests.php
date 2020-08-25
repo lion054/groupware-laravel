@@ -3,24 +3,26 @@
 namespace Laravel\Lumen\Concerns;
 
 use Closure;
-use Exception;
-use Throwable;
 use FastRoute\Dispatcher;
-use Illuminate\Support\Str;
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Laravel\Lumen\Routing\Pipeline;
-use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Laravel\Lumen\Http\Request as LumenRequest;
 use Laravel\Lumen\Routing\Closure as RoutingClosure;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Laravel\Lumen\Routing\Controller as LumenController;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Laravel\Lumen\Routing\Pipeline;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
-use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
+use RuntimeException;
 use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 trait RoutesRequests
 {
@@ -152,10 +154,14 @@ trait RoutesRequests
      */
     public function dispatch($request = null)
     {
-        list($method, $pathInfo) = $this->parseIncomingRequest($request);
+        [$method, $pathInfo] = $this->parseIncomingRequest($request);
 
         try {
-            return $this->sendThroughPipeline($this->middleware, function () use ($method, $pathInfo) {
+            $this->boot();
+
+            return $this->sendThroughPipeline($this->middleware, function ($request) use ($method, $pathInfo) {
+                $this->instance(Request::class, $request);
+
                 if (isset($this->router->getRoutes()[$method.$pathInfo])) {
                     return $this->handleFoundRoute([true, $this->router->getRoutes()[$method.$pathInfo]['action'], []]);
                 }
@@ -164,8 +170,6 @@ trait RoutesRequests
                     $this->createDispatcher()->dispatch($method, $pathInfo)
                 );
             });
-        } catch (Exception $e) {
-            return $this->prepareResponse($this->sendExceptionToHandler($e));
         } catch (Throwable $e) {
             return $this->prepareResponse($this->sendExceptionToHandler($e));
         }
@@ -180,7 +184,7 @@ trait RoutesRequests
     protected function parseIncomingRequest($request)
     {
         if (! $request) {
-            $request = Request::capture();
+            $request = LumenRequest::capture();
         }
 
         $this->instance(Request::class, $this->prepareRequest($request));
@@ -262,7 +266,7 @@ trait RoutesRequests
     }
 
     /**
-     * Call the Closure on the array based route.
+     * Call the Closure or invokable on the array based route.
      *
      * @param  array  $routeInfo
      * @return mixed
@@ -277,13 +281,22 @@ trait RoutesRequests
 
         foreach ($action as $value) {
             if ($value instanceof Closure) {
-                $closure = $value->bindTo(new RoutingClosure);
+                $callable = $value->bindTo(new RoutingClosure);
+                break;
+            }
+
+            if (is_object($value) && is_callable($value)) {
+                $callable = $value;
                 break;
             }
         }
 
+        if (! isset($callable)) {
+            throw new RuntimeException('Unable to resolve route handler.');
+        }
+
         try {
-            return $this->prepareResponse($this->call($closure, $routeInfo[2]));
+            return $this->prepareResponse($this->call($callable, $routeInfo[2]));
         } catch (HttpResponseException $e) {
             return $e->getResponse();
         }
@@ -303,7 +316,7 @@ trait RoutesRequests
             $uses .= '@__invoke';
         }
 
-        list($controller, $method) = explode('@', $uses);
+        [$controller, $method] = explode('@', $uses);
 
         if (! method_exists($instance = $this->make($controller), $method)) {
             throw new NotFoundHttpException;
@@ -388,9 +401,9 @@ trait RoutesRequests
         $middleware = is_string($middleware) ? explode('|', $middleware) : (array) $middleware;
 
         return array_map(function ($name) {
-            list($name, $parameters) = array_pad(explode(':', $name, 2), 2, null);
+            [$name, $parameters] = array_pad(explode(':', $name, 2), 2, null);
 
-            return array_get($this->routeMiddleware, $name, $name).($parameters ? ':'.$parameters : '');
+            return Arr::get($this->routeMiddleware, $name, $name).($parameters ? ':'.$parameters : '');
         }, $middleware);
     }
 
@@ -410,7 +423,7 @@ trait RoutesRequests
                 ->then($then);
         }
 
-        return $then();
+        return $then($this->make('request'));
     }
 
     /**
@@ -421,8 +434,10 @@ trait RoutesRequests
      */
     public function prepareResponse($response)
     {
+        $request = app(Request::class);
+
         if ($response instanceof Responsable) {
-            $response = $response->toResponse(Request::capture());
+            $response = $response->toResponse($request);
         }
 
         if ($response instanceof PsrResponseInterface) {
@@ -433,7 +448,7 @@ trait RoutesRequests
             $response = $response->prepare(Request::capture());
         }
 
-        return $response;
+        return $response->prepare($request);
     }
 
     /**
