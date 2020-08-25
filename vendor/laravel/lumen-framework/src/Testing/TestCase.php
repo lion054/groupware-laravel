@@ -4,7 +4,6 @@ namespace Laravel\Lumen\Testing;
 
 use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Facade;
 use Mockery;
 use PHPUnit\Framework\TestCase as BaseTestCase;
@@ -189,7 +188,7 @@ abstract class TestCase extends BaseTestCase
     {
         $events = is_array($events) ? $events : func_get_args();
 
-        $mock = Mockery::spy(\Illuminate\Contracts\Events\Dispatcher::class);
+        $mock = Mockery::spy('Illuminate\Contracts\Events\Dispatcher');
 
         $mock->shouldReceive('dispatch')->andReturnUsing(function ($called) use (&$events) {
             foreach ($events as $key => $event) {
@@ -221,7 +220,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function withoutEvents()
     {
-        $mock = Mockery::mock(\Illuminate\Contracts\Events\Dispatcher::class);
+        $mock = Mockery::mock('Illuminate\Contracts\Events\Dispatcher');
 
         $mock->shouldReceive('dispatch');
 
@@ -250,7 +249,7 @@ abstract class TestCase extends BaseTestCase
         }
 
         $this->app->instance(
-            \Illuminate\Contracts\Bus\Dispatcher::class, $mock
+            'Illuminate\Contracts\Bus\Dispatcher', $mock
         );
 
         return $this;
@@ -270,7 +269,7 @@ abstract class TestCase extends BaseTestCase
         });
 
         $this->app->instance(
-            \Illuminate\Contracts\Bus\Dispatcher::class, $mock
+            'Illuminate\Contracts\Bus\Dispatcher', $mock
         );
 
         return $this;
@@ -311,7 +310,7 @@ abstract class TestCase extends BaseTestCase
      */
     public function artisan($command, $parameters = [])
     {
-        return $this->code = $this->app[Kernel::class]->call($command, $parameters);
+        return $this->code = $this->app['Illuminate\Contracts\Console\Kernel']->call($command, $parameters);
     }
 
     /**

@@ -5,9 +5,8 @@ namespace Laravel\Lumen\Testing\Concerns;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Illuminate\Testing\Assert as PHPUnit;
-use Illuminate\Testing\TestResponse;
 use Laravel\Lumen\Http\Request as LumenRequest;
+use PHPUnit\Framework\Assert as PHPUnit;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 trait MakesHttpRequests
@@ -182,9 +181,7 @@ trait MakesHttpRequests
     {
         $this->currentUri = $request->fullUrl();
 
-        $this->response = TestResponse::fromBaseResponse(
-            $this->app->prepareResponse($this->app->handle($request))
-        );
+        $this->response = $this->app->prepareResponse($this->app->handle($request));
 
         return $this;
     }
@@ -242,15 +239,11 @@ trait MakesHttpRequests
     public function seeJson(array $data = null, $negate = false)
     {
         if (is_null($data)) {
-            $decodedResponse = json_decode($this->response->getContent(), true);
+            PHPUnit::assertJson(
+                $this->response->getContent(), "JSON was not returned from [{$this->currentUri}]."
+            );
 
-            if (is_null($decodedResponse) || $decodedResponse === false) {
-                PHPUnit::fail(
-                    "JSON was not returned from [{$this->currentUri}]."
-                );
-            }
-
-            return $this->seeJsonContains($decodedResponse, $negate);
+            return $this;
         }
 
         return $this->seeJsonContains($data, $negate);
@@ -276,7 +269,28 @@ trait MakesHttpRequests
      */
     public function seeJsonStructure(array $structure = null, $responseData = null)
     {
-        $this->response->assertJsonStructure($structure, $responseData);
+        if (is_null($structure)) {
+            return $this->seeJson();
+        }
+
+        if (! is_array($responseData)) {
+            $responseData = json_decode($this->response->getContent(), true);
+        }
+
+        foreach ($structure as $key => $value) {
+            if (is_array($value) && $key === '*') {
+                PHPUnit::assertIsArray($responseData);
+
+                foreach ($responseData as $responseDataItem) {
+                    $this->seeJsonStructure($structure['*'], $responseDataItem);
+                }
+            } elseif (is_array($value)) {
+                PHPUnit::assertArrayHasKey($key, $responseData);
+                $this->seeJsonStructure($structure[$key], $responseData[$key]);
+            } else {
+                PHPUnit::assertArrayHasKey($value, $responseData);
+            }
+        }
 
         return $this;
     }
@@ -290,10 +304,25 @@ trait MakesHttpRequests
      */
     protected function seeJsonContains(array $data, $negate = false)
     {
-        if ($negate) {
-            $this->response->assertJsonMissing($data, false);
-        } else {
-            $this->response->assertJsonFragment($data);
+        $method = $negate ? 'assertFalse' : 'assertTrue';
+
+        $actual = json_decode($this->response->getContent(), true);
+
+        if (is_null($actual) || $actual === false) {
+            return PHPUnit::fail('Invalid JSON was returned from the route. Perhaps an exception was thrown?');
+        }
+
+        $actual = json_encode(Arr::sortRecursive(
+            (array) $actual
+        ));
+
+        foreach (Arr::sortRecursive($data) as $key => $value) {
+            $expected = $this->formatToExpectedJson($key, $value);
+
+            PHPUnit::{$method}(
+                Str::contains($actual, $expected),
+                ($negate ? 'Found unexpected' : 'Unable to find')." JSON fragment [{$expected}] within [{$actual}]."
+            );
         }
 
         return $this;
@@ -307,9 +336,7 @@ trait MakesHttpRequests
      */
     protected function seeJsonDoesntContains(array $data)
     {
-        $this->response->assertJsonMissing($data, false);
-
-        return $this;
+        return $this->seeJsonContains($data, true);
     }
 
     /**
@@ -357,8 +384,8 @@ trait MakesHttpRequests
 
         $this->app['request'] = LumenRequest::createFromBase($symfonyRequest);
 
-        return $this->response = TestResponse::fromBaseResponse(
-            $this->app->prepareResponse($this->app->handle($this->app['request']))
+        return $this->response = $this->app->prepareResponse(
+            $this->app->handle($this->app['request'])
         );
     }
 
@@ -412,18 +439,22 @@ trait MakesHttpRequests
      */
     public function assertResponseOk()
     {
-        $this->response->assertOk();
+        $actual = $this->response->getStatusCode();
+
+        return PHPUnit::assertTrue($this->response->isOk(), "Expected status code 200, got {$actual}.");
     }
 
     /**
-     * Assert that the client response has a given status code.
+     * Assert that the client response has a given code.
      *
-     * @param  int  $status
+     * @param  int  $code
      * @return void
      */
-    public function assertResponseStatus($status)
+    public function assertResponseStatus($code)
     {
-        $this->response->assertStatus($status);
+        $actual = $this->response->getStatusCode();
+
+        return PHPUnit::assertEquals($code, $this->response->getStatusCode(), "Expected status code {$code}, got {$actual}.");
     }
 
     /**
@@ -448,7 +479,16 @@ trait MakesHttpRequests
      */
     protected function seeHeader($headerName, $value = null)
     {
-        $this->response->assertHeader($headerName, $value);
+        $headers = $this->response->headers;
+
+        PHPUnit::assertTrue($headers->has($headerName), "Header [{$headerName}] not present on response.");
+
+        if (! is_null($value)) {
+            PHPUnit::assertEquals(
+                $value, $headers->get($headerName),
+                "Header [{$headerName}] was found, but value [{$headers->get($headerName)}] does not match [{$value}]."
+            );
+        }
 
         return $this;
     }
