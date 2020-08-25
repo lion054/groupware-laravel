@@ -18,9 +18,9 @@ class ComposerStaticInit262ad36aab857d9c2f0a1bc74e64a644
         '72579e7bd17821bb1321b87411366eae' => __DIR__ . '/..' . '/illuminate/support/helpers.php',
         '538ca81a9a966a6716601ecf48f4eaef' => __DIR__ . '/..' . '/opis/closure/functions.php',
         '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
-        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
         '253c157292f75eb38082b5acb06f3f01' => __DIR__ . '/..' . '/nikic/fast-route/src/functions.php',
         'bee9632da3ca00a99623b9c35d0c4f8b' => __DIR__ . '/..' . '/laravel/lumen-framework/src/helpers.php',
+        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -68,6 +68,10 @@ class ComposerStaticInit262ad36aab857d9c2f0a1bc74e64a644
         'O' => 
         array (
             'Opis\\Closure\\' => 13,
+        ),
+        'N' => 
+        array (
+            'Nord\\Lumen\\Cors\\' => 16,
         ),
         'M' => 
         array (
@@ -253,6 +257,10 @@ class ComposerStaticInit262ad36aab857d9c2f0a1bc74e64a644
         'Opis\\Closure\\' => 
         array (
             0 => __DIR__ . '/..' . '/opis/closure/src',
+        ),
+        'Nord\\Lumen\\Cors\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/nordsoftware/lumen-cors/src',
         ),
         'Monolog\\' => 
         array (
@@ -2057,6 +2065,10 @@ class ComposerStaticInit262ad36aab857d9c2f0a1bc74e64a644
         'Monolog\\SignalHandler' => __DIR__ . '/..' . '/monolog/monolog/src/Monolog/SignalHandler.php',
         'Monolog\\Test\\TestCase' => __DIR__ . '/..' . '/monolog/monolog/src/Monolog/Test/TestCase.php',
         'Monolog\\Utils' => __DIR__ . '/..' . '/monolog/monolog/src/Monolog/Utils.php',
+        'Nord\\Lumen\\Cors\\Contracts\\CorsService' => __DIR__ . '/..' . '/nordsoftware/lumen-cors/src/Contracts/CorsService.php',
+        'Nord\\Lumen\\Cors\\CorsMiddleware' => __DIR__ . '/..' . '/nordsoftware/lumen-cors/src/CorsMiddleware.php',
+        'Nord\\Lumen\\Cors\\CorsService' => __DIR__ . '/..' . '/nordsoftware/lumen-cors/src/CorsService.php',
+        'Nord\\Lumen\\Cors\\CorsServiceProvider' => __DIR__ . '/..' . '/nordsoftware/lumen-cors/src/CorsServiceProvider.php',
         'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
         'Opis\\Closure\\Analyzer' => __DIR__ . '/..' . '/opis/closure/src/Analyzer.php',
         'Opis\\Closure\\ClosureContext' => __DIR__ . '/..' . '/opis/closure/src/ClosureContext.php',
