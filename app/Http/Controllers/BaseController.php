@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use GraphAware\Neo4j\Client\ClientBuilder;
 use Laravel\Lumen\Routing\Controller;
+use Lcobucci\JWT\Parser;
 
 abstract class BaseController extends Controller
 {
@@ -25,6 +26,39 @@ abstract class BaseController extends Controller
         $this->client = ClientBuilder::create()
             ->addConnection('default', "http://$username:$password@$host:$port")
             ->build();
+    }
+
+    public function getCurrentUser($request)
+    {
+        $header = $request->header('Authorization');
+        if (empty($header))
+            return false;
+
+        $parser = new Parser();
+        $token = $parser->parse($header);
+
+        $data = new ValidationData();
+        $data->setIssuer(config('jwt.iss'));
+        $data->setAudience(config('jwt.aud'));
+
+        if (!$token->validate($data))
+            return false;
+
+        if (!$token->isExpired())
+            return false;
+
+        $query = [
+            'MATCH (u:User{ uuid: {uuid} })',
+            'RETURN u',
+        ];
+        $result = $this->client->run(implode(' ', $query), [
+            'uuid' => $token->getClaim('sub'),
+        ]);
+
+        if ($result->size() == 0)
+            return false;
+
+        return $result->getRecord()->get('u');
     }
 
     private function makeUuidForNode()

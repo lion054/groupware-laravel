@@ -43,8 +43,8 @@ class AuthenticateToken
         if (empty($header)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Bad Request',
-            ], 400);
+                'error' => 'Token not found',
+            ], 401);
         }
 
         $parser = new Parser();
@@ -57,7 +57,14 @@ class AuthenticateToken
         if (!$token->validate($data)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized',
+                'error' => 'Invalid token',
+            ], 401);
+        }
+
+        if (!$token->isExpired()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Token expired',
             ], 401);
         }
 
@@ -72,7 +79,7 @@ class AuthenticateToken
         if ($result->size() == 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Not Found',
+                'error' => 'User not found',
             ], 404);
         }
 

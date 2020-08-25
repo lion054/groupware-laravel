@@ -33,6 +33,8 @@ class AuthController extends BaseController
                 'error' => 'This account was deleted',
             ];
         }
+        if (isset($user['password']))
+            unset($user['password']);
 
         return [
             'user' => $user,

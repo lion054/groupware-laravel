@@ -42,7 +42,7 @@ class CreateToken
             $token = $builder->getToken($signer, new Key($secret));
 
             $content['expires'] = $ttl * 60;
-            $content['token'] = $token->__toString();
+            $content['token'] = $token->getPayload();
             $content['type'] = 'bearer';
             $response->setContent($content);
         }
