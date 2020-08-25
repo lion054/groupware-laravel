@@ -27,6 +27,8 @@ $app = new Laravel\Lumen\Application(
 
 // $app->withEloquent();
 
+$app->configure('filesystems');
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -78,6 +80,8 @@ $app->middleware([
 |
 */
 
+$app->register(Illuminate\Filesystem\FilesystemServiceProvider::class);
+$app->register(Intervention\Image\ImageServiceProviderLumen::class);
 $app->register(Nord\Lumen\Cors\CorsServiceProvider::class);
 
 /*
