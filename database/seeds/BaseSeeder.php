@@ -125,10 +125,10 @@ class BaseSeeder extends Seeder
                 'MATCH (n{ uuid: {uuid} })',
                 'RETURN COUNT(*)',
             ];
-            $record = $this->client->run(implode(' ', $query), [
+            $result = $this->client->run(implode(' ', $query), [
                 'uuid' => $uuid,
-            ])->getRecord();
-            if ($record->values()[0] == 0)
+            ]);
+            if ($result->size() == 0)
                 return $uuid;
         }
     }
@@ -141,10 +141,10 @@ class BaseSeeder extends Seeder
                 'MATCH ()-[r{ uuid: {uuid} }]->()',
                 'RETURN COUNT(r)',
             ];
-            $record = $this->client->run(implode(' ', $query), [
+            $result = $this->client->run(implode(' ', $query), [
                 'uuid' => $uuid,
-            ])->getRecord();
-            if ($record->values()[0] == 0)
+            ]);
+            if ($result->size() == 0)
                 return $uuid;
         }
     }
@@ -155,11 +155,11 @@ class BaseSeeder extends Seeder
         if ($excludingUuid)
             $query[] = 'WHERE n.uuid <> {uuid}';
         $query[] = 'RETURN COUNT(*)';
-        $record = $this->client->run(implode(' ', $query), [
+        $result = $this->client->run(implode(' ', $query), [
             'value' => $value,
             'uuid' => $excludingUuid,
-        ])->getRecord();
-        return $record->values()[0] == 0;
+        ]);
+        return $result->size() == 0;
     }
 
     protected function createNode($label, $data)
@@ -200,8 +200,10 @@ class BaseSeeder extends Seeder
         if (!empty($invalidKeys))
             $query[] = 'REMOVE ' . implode(', ', $invalidKeys);
         $query[] = 'RETURN n';
-        $record = $this->client->run(implode(' ', $query), $info)->getRecord();
-        return $record->get('n');
+        $result = $this->client->run(implode(' ', $query), $info);
+        if ($result->size() == 0)
+            return false;
+        return $result->getRecord()->get('n');
     }
 
     protected function createRelation($fromUuid, $toUuid, $type, $data = NULL, $direction = 'OUTGOING')

@@ -9,6 +9,7 @@
         "graphaware/neo4j-php-client": "^4.8",
         "intervention/image": "^2.5",
         "laravel/lumen-framework": "^6.0",
+        "lcobucci/jwt": "^3.3",
         "league/flysystem": "^1.1",
         "nordsoftware/lumen-cors": "^3.3"
     },

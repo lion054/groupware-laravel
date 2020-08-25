@@ -14,3 +14,12 @@
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+
+$router->group([
+    'middleware' => [
+        // 'throttle:10,1', // The user can call auth APIs up to 10 times in every a minute
+        'token.create',
+    ]
+], function () use ($router) {
+    $router->post('auth/login_with_email_password', 'AuthController@loginWithEmailPassword');
+});

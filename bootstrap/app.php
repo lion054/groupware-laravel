@@ -25,6 +25,12 @@ $app = new Laravel\Lumen\Application(
 
 // $app->withEloquent();
 
+$app->configure('app');
+$app->configure('cors');
+$app->configure('database');
+$app->configure('filesystems');
+$app->configure('jwt');
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -58,12 +64,14 @@ $app->singleton(
 */
 
 $app->middleware([
-    Nord\Lumen\Cors\CorsMiddleware::class
+    Nord\Lumen\Cors\CorsMiddleware::class,
 ]);
 
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+$app->routeMiddleware([
+    'token.create' => App\Http\Middleware\CreateToken::class,
+    'token.auth' => App\Http\Middleware\AuthenticateToken::class,
+    'token.refresh' => App\Http\Middleware\RefreshToken::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +84,7 @@ $app->middleware([
 |
 */
 
+$app->register(App\Providers\AppServiceProvider::class);
 $app->register(Intervention\Image\ImageServiceProvider::class);
 $app->register(Nord\Lumen\Cors\CorsServiceProvider::class);
 
