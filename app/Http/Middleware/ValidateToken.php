@@ -83,6 +83,11 @@ class ValidateToken
             ], 404);
         }
 
+        $user = $result->getRecord()->get('u')->values();
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
+
         return $next($request);
     }
 }

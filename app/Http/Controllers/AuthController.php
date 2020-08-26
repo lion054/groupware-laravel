@@ -40,4 +40,9 @@ class AuthController extends BaseController
             'user' => $user,
         ];
     }
+
+    public function verify(Request $request)
+    {
+        return $request->user();
+    }
 }

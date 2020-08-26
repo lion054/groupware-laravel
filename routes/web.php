@@ -23,3 +23,9 @@ $router->group([
 ], function () use ($router) {
     $router->post('auth/login_with_email_password', 'AuthController@loginWithEmailPassword');
 });
+
+$router->group([
+    'middleware' => 'token.validate'
+], function () use ($router) {
+    $router->get('auth/verify', 'AuthController@verify');
+});
