@@ -68,8 +68,8 @@ $app->middleware([
 ]);
 
 $app->routeMiddleware([
-    'token.create' => App\Http\Middleware\CreateToken::class,
-    'token.auth' => App\Http\Middleware\AuthenticateToken::class,
+    'token.generate' => App\Http\Middleware\GenerateToken::class,
+    'token.validate' => App\Http\Middleware\ValidateToken::class,
     'token.refresh' => App\Http\Middleware\RefreshToken::class,
 ]);
 

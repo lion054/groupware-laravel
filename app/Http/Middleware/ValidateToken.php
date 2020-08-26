@@ -7,7 +7,7 @@ use Lcobucci\JWT\ValidationData;
 
 use Closure;
 
-class AuthenticateToken
+class ValidateToken
 {
     /**
      * @var Neo4j PHP Client

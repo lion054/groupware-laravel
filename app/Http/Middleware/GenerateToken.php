@@ -8,7 +8,7 @@ use Lcobucci\JWT\Signer\Key;
 
 use Closure;
 
-class CreateToken
+class GenerateToken
 {
     /**
      * Handle an incoming request.
