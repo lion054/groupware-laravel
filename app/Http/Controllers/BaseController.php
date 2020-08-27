@@ -29,7 +29,7 @@ abstract class BaseController extends Controller
             ->build();
     }
 
-    public function getCurrentUser($request)
+    protected function getCurrentUser($request)
     {
         $header = $request->header('Authorization');
         if (empty($header))
@@ -60,6 +60,31 @@ abstract class BaseController extends Controller
             return false;
 
         return $result->getRecord()->get('u');
+    }
+
+    /**
+     * Validate the given request with the given rules.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  array  $rules
+     * @param  array  $messages
+     * @param  array  $customAttributes
+     * @return array
+     *
+     * @throws ValidationException
+     */
+    protected function validateWithHook(Request $request, array $rules, array $messages = [], array $customAttributes = [], $callback = null)
+    {
+        $validator = $this->getValidationFactory()->make($request->all(), $rules, $messages, $customAttributes);
+
+        if ($callback)
+            $validator->after($callback);
+
+        if ($validator->fails()) {
+            $this->throwValidationException($request, $validator);
+        }
+
+        return $this->extractInputFromRules($request, $rules);
     }
 
     protected function checkUnique($label, $field, $value, $excludingUuid = false)
