@@ -2,33 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use GraphAware\Neo4j\Client\ClientBuilder;
 use Laravel\Lumen\Routing\Controller;
 use Lcobucci\JWT\Parser;
 use Ramsey\Uuid\Uuid;
 
 abstract class BaseController extends Controller
 {
-    /**
-     * @var Neo4j PHP Client
-     */
-    protected $client = null;
-
-    /**
-     * Initialize the client
-     */
-    public function __construct()
-    {
-        $host = config('database.connections.neo4j.host');
-        $port = config('database.connections.neo4j.port');
-        $username = config('database.connections.neo4j.username');
-        $password = config('database.connections.neo4j.password');
-
-        $this->client = ClientBuilder::create()
-            ->addConnection('default', "http://$username:$password@$host:$port")
-            ->build();
-    }
-
     protected function getCurrentUser($request)
     {
         $header = $request->header('Authorization');
@@ -52,7 +31,7 @@ abstract class BaseController extends Controller
             'MATCH (u:User{ uuid: {uuid} })',
             'RETURN u',
         ];
-        $result = $this->client->run(implode(' ', $query), [
+        $result = app('neo4j')->run(implode(' ', $query), [
             'uuid' => $token->getClaim('sub'),
         ]);
 
@@ -93,7 +72,7 @@ abstract class BaseController extends Controller
         if ($excludingUuid)
             $query[] = 'WHERE n.uuid <> {uuid}';
         $query[] = 'RETURN COUNT(*)';
-        $result = $this->client->run(implode(' ', $query), [
+        $result = app('neo4j')->run(implode(' ', $query), [
             'value' => $value,
             'uuid' => $excludingUuid,
         ]);
@@ -111,7 +90,7 @@ abstract class BaseController extends Controller
             'SET n += {info}',
             'RETURN n',
         ];
-        $record = $this->client->run(implode(' ', $query), [
+        $record = app('neo4j')->run(implode(' ', $query), [
             'info' => $info
         ])->getRecord();
         return $record->get('n');
@@ -147,7 +126,7 @@ abstract class BaseController extends Controller
                 $info[$key] = $value;
         }
         $info['uuid'] = Uuid::uuid4();
-        $record = $this->client->run(implode(' ', $query), [
+        $record = app('neo4j')->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,
             'info' => $info,
@@ -168,7 +147,7 @@ abstract class BaseController extends Controller
             'MATCH (n{ ' . implode(', ', $data) . ' })',
             'RETURN n',
         ];
-        $result = $this->client->run(implode(' ', $query), $params);
+        $result = app('neo4j')->run(implode(' ', $query), $params);
         if ($result->size() == 0)
             return false;
         return $result->getRecord()->get('n');
@@ -187,7 +166,7 @@ abstract class BaseController extends Controller
             'MATCH ()-[r{ ' . implode(', ', $data) . ' }]-()',
             'RETURN r',
         ];
-        $result = $this->client->run(implode(' ', $query), $params);
+        $result = app('neo4j')->run(implode(' ', $query), $params);
         if ($result->size() == 0)
             return false;
         return $result->getRecord()->get('r');
@@ -216,7 +195,7 @@ abstract class BaseController extends Controller
             'WHERE NOT (n)' . $left . "[:$type]" . $right . '()', // "n" must be top-level
             'RETURN NODES(p)', // "p" means path
         ];
-        $result = $this->client->run(implode(' ', $query), [
+        $result = app('neo4j')->run(implode(' ', $query), [
             'uuid' => $uuid,
         ]);
         if ($result->size() == 0)
@@ -254,7 +233,7 @@ abstract class BaseController extends Controller
             'MATCH ({ uuid: {uuid} })' . $left . "[:$type]" . $right . '(n)',
             'RETURN n',
         ];
-        $records = $this->client->run(implode(' ', $query), [
+        $records = app('neo4j')->run(implode(' ', $query), [
             'uuid' => $uuid,
         ])->getRecords();
         if (empty($records))
@@ -296,7 +275,7 @@ abstract class BaseController extends Controller
             'MATCH (from{ uuid: {from_uuid} })' . $left . "[r:$type]" . $right . '(to{ uuid: {to_uuid} })',
             'RETURN r',
         ];
-        $records = $this->client->run(implode(' ', $query), [
+        $records = app('neo4j')->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,
         ])->getRecords();
@@ -327,7 +306,7 @@ abstract class BaseController extends Controller
         if (!empty($invalidKeys))
             $query[] = 'REMOVE ' . implode(', ', $invalidKeys);
         $query[] = 'RETURN n';
-        $result = $this->client->run(implode(' ', $query), $info);
+        $result = app('neo4j')->run(implode(' ', $query), $info);
         if ($result->size() == 0)
             return false;
         return $result->getRecord()->get('n');
@@ -354,7 +333,7 @@ abstract class BaseController extends Controller
         if (!empty($emptyData))
             $query[] = 'REMOVE ' . implode(', ', $invalidKeys);
         $query[] = 'RETURN r';
-        $result = $this->client->run(implode(' ', $query), $info);
+        $result = app('neo4j')->run(implode(' ', $query), $info);
         if ($result->size() == 0)
             return false;
         return $result->getRecord()->get('r');
@@ -366,7 +345,7 @@ abstract class BaseController extends Controller
             'MATCH (n{ uuid: {uuid} })',
             'DETACH DELETE n',
         ];
-        $this->client->run(implode(' ', $query), [
+        app('neo4j')->run(implode(' ', $query), [
             'uuid' => $uuid,
         ]);
     }
@@ -377,7 +356,7 @@ abstract class BaseController extends Controller
             'MATCH ()-[r{ uuid: {uuid} }]-()',
             'DELETE r',
         ];
-        $this->client->run(implode(' ', $query), [
+        app('neo4j')->run(implode(' ', $query), [
             'uuid' => $uuid,
         ]);
     }

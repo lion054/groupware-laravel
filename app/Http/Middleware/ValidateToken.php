@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use GraphAware\Neo4j\Client\ClientBuilder;
 use Lcobucci\JWT\Claim\Validatable;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
@@ -13,26 +12,6 @@ use Closure;
 
 class ValidateToken
 {
-    /**
-     * @var Neo4j PHP Client
-     */
-    protected $client = null;
-
-    /**
-     * Create a new middleware instance.
-     */
-    public function __construct()
-    {
-        $host = config('database.connections.neo4j.host');
-        $port = config('database.connections.neo4j.port');
-        $username = config('database.connections.neo4j.username');
-        $password = config('database.connections.neo4j.password');
-
-        $this->client = ClientBuilder::create()
-            ->addConnection('default', "http://$username:$password@$host:$port")
-            ->build();
-    }
-
     /**
      * Handle an incoming request.
      *
@@ -89,7 +68,7 @@ class ValidateToken
             'MATCH (u:User{ uuid: {uuid} })',
             'RETURN u',
         ];
-        $result = $this->client->run(implode(' ', $query), [
+        $result = app('neo4j')->run(implode(' ', $query), [
             'uuid' => $token->getClaim('sub'),
         ]);
 
