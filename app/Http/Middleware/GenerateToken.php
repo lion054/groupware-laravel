@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use GraphAware\Neo4j\Client\ClientBuilder;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Signer\Key;
@@ -42,7 +43,7 @@ class GenerateToken
             $token = $builder->getToken($signer, new Key($secret));
 
             $content['expires'] = $ttl * 60;
-            $content['token'] = $token->getPayload();
+            $content['token'] = $token->__toString();
             $content['type'] = 'bearer';
             $response->setContent($content);
         }

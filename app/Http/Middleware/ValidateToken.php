@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use GraphAware\Neo4j\Client\ClientBuilder;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\ValidationData;
 
@@ -39,8 +40,8 @@ class ValidateToken
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        $header = $request->header('Authorization');
-        if (empty($header)) {
+        $value = $request->bearerToken();
+        if (empty($value)) {
             return response()->json([
                 'success' => false,
                 'error' => 'Token not found',
@@ -48,20 +49,22 @@ class ValidateToken
         }
 
         $parser = new Parser();
-        $token = $parser->parse($header);
+        $token = $parser->parse($value);
 
-        $data = new ValidationData();
+        $now = time();
+        $leeway = config('jwt.leeway');
+        $data = new ValidationData($now, $leeway);
         $data->setIssuer(config('jwt.iss'));
         $data->setAudience(config('jwt.aud'));
 
         if (!$token->validate($data)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Invalid token',
+                'error' => 'Invalid token data',
             ], 401);
         }
 
-        if (!$token->isExpired()) {
+        if ($token->isExpired()) {
             return response()->json([
                 'success' => false,
                 'error' => 'Token expired',
@@ -84,6 +87,8 @@ class ValidateToken
         }
 
         $user = $result->getRecord()->get('u')->values();
+        if (isset($user['password']))
+            unset($user['password']);
         $request->setUserResolver(function () use ($user) {
             return $user;
         });
