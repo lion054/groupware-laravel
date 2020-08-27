@@ -9,7 +9,6 @@ use Lcobucci\JWT\Signer\Hmac\Sha256;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\ValidationData;
 
-
 use Closure;
 
 class ValidateToken

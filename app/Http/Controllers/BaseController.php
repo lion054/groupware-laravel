@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use Laravel\Lumen\Routing\Controller;
 use Lcobucci\JWT\Parser;
+use Ramsey\Uuid\Uuid;
 
 abstract class BaseController extends Controller
 {
@@ -61,38 +62,6 @@ abstract class BaseController extends Controller
         return $result->getRecord()->get('u');
     }
 
-    private function makeUuidForNode()
-    {
-        while (true) {
-            $uuid = uniqid();
-            $query = [
-                'MATCH (n{ uuid: {uuid} })',
-                'RETURN COUNT(*)',
-            ];
-            $result = $this->client->run(implode(' ', $query), [
-                'uuid' => $uuid,
-            ]);
-            if ($result->size() == 0)
-                return $uuid;
-        }
-    }
-
-    private function makeUuidForRelation()
-    {
-        while (true) {
-            $uuid = uniqid();
-            $query = [
-                'MATCH ()-[r{ uuid: {uuid} }]->()',
-                'RETURN COUNT(r)',
-            ];
-            $result = $this->client->run(implode(' ', $query), [
-                'uuid' => $uuid,
-            ]);
-            if ($result->size() == 0)
-                return $uuid;
-        }
-    }
-
     protected function checkUnique($label, $field, $value, $excludingUuid = false)
     {
         $query = ["MATCH (n:$label{ $field: {value} })"];
@@ -111,7 +80,7 @@ abstract class BaseController extends Controller
         $info = [];
         foreach ($data as $key => $value)
             $info[$key] = $value;
-        $info['uuid'] = $this->makeUuidForNode();
+        $info['uuid'] = Uuid::uuid4();
         $query = [
             "CREATE (n:$label)",
             'SET n += {info}',
@@ -152,7 +121,7 @@ abstract class BaseController extends Controller
             foreach ($data as $key => $value)
                 $info[$key] = $value;
         }
-        $info['uuid'] = $this->makeUuidForRelation();
+        $info['uuid'] = Uuid::uuid4();
         $record = $this->client->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,

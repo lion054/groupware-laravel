@@ -4,6 +4,7 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
+use Ramsey\Uuid\Uuid;
 
 class BaseSeeder extends Seeder
 {
@@ -117,38 +118,6 @@ class BaseSeeder extends Seeder
         return $path;
     }
 
-    private function makeUuidForNode()
-    {
-        while (TRUE) {
-            $uuid = uniqid();
-            $query = [
-                'MATCH (n{ uuid: {uuid} })',
-                'RETURN COUNT(*)',
-            ];
-            $result = $this->client->run(implode(' ', $query), [
-                'uuid' => $uuid,
-            ]);
-            if ($result->size() == 0)
-                return $uuid;
-        }
-    }
-
-    private function makeUuidForRelation()
-    {
-        while (TRUE) {
-            $uuid = uniqid();
-            $query = [
-                'MATCH ()-[r{ uuid: {uuid} }]->()',
-                'RETURN COUNT(r)',
-            ];
-            $result = $this->client->run(implode(' ', $query), [
-                'uuid' => $uuid,
-            ]);
-            if ($result->size() == 0)
-                return $uuid;
-        }
-    }
-
     protected function checkUnique($label, $field, $value, $excludingUuid = FALSE)
     {
         $query = ["MATCH (n:$label{ $field: {value} })"];
@@ -167,7 +136,7 @@ class BaseSeeder extends Seeder
         $info = [];
         foreach ($data as $key => $value)
             $info[$key] = $value;
-        $info['uuid'] = $this->makeUuidForNode();
+        $info['uuid'] = Uuid::uuid4();
         $query = [
             "CREATE (n:$label)",
             'SET n += {info}',
@@ -235,7 +204,7 @@ class BaseSeeder extends Seeder
             foreach ($data as $key => $value)
                 $info[$key] = $value;
         }
-        $info['uuid'] = $this->makeUuidForRelation();
+        $info['uuid'] = Uuid::uuid4();
         $record = $this->client->run(implode(' ', $query), [
             'from_uuid' => $fromUuid,
             'to_uuid' => $toUuid,
