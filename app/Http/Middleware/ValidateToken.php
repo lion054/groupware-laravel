@@ -3,8 +3,12 @@
 namespace App\Http\Middleware;
 
 use GraphAware\Neo4j\Client\ClientBuilder;
+use Lcobucci\JWT\Claim\Validatable;
 use Lcobucci\JWT\Parser;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Token;
 use Lcobucci\JWT\ValidationData;
+
 
 use Closure;
 
@@ -51,24 +55,35 @@ class ValidateToken
         $parser = new Parser();
         $token = $parser->parse($value);
 
-        $now = time();
-        $leeway = config('jwt.leeway');
-        $data = new ValidationData($now, $leeway);
-        $data->setIssuer(config('jwt.iss'));
-        $data->setAudience(config('jwt.aud'));
-
-        if (!$token->validate($data)) {
+        $signer = new Sha256();
+        $secret = config('jwt.secret');
+        if (!$token->verify($signer, $secret)) {
             return response()->json([
                 'success' => false,
-                'error' => 'Invalid token data',
+                'error' => 'Token not verified',
             ], 401);
         }
 
-        if ($token->isExpired()) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Token expired',
-            ], 401);
+        $leeway = config('jwt.leeway');
+        $data = new ValidationData(null, $leeway);
+        $data->setIssuer(config('jwt.iss'));
+        $data->setAudience(config('jwt.aud'));
+
+        $claims = $this->getValidatableClaims($token);
+        foreach ($claims as $claim) {
+            if ($claim->validate($data))
+                continue;
+            if ($claim->getName() == 'exp') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Token expired',
+                ], 401);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Invalid token data',
+                ], 401);
+            }
         }
 
         $query = [
@@ -94,5 +109,13 @@ class ValidateToken
         });
 
         return $next($request);
+    }
+
+    private function getValidatableClaims(Token $token)
+    {
+        foreach ($token->getClaims() as $claim) {
+            if ($claim instanceof Validatable)
+                yield $claim;
+        }
     }
 }
