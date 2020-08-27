@@ -34,7 +34,7 @@ class UserController extends BaseController
         if (!empty($limit))
             $query[] = 'LIMIT {limit}';
 
-        $records = $this->client->run(implode(' ', $query), [
+        $records = app('neo4j')->run(implode(' ', $query), [
             'search' => $search,
             'limit' => intval($limit),
         ])->getRecords();

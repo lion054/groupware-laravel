@@ -19,7 +19,7 @@ class CompanyController extends BaseController
         if (!empty($limit))
             $query[] = 'LIMIT {limit}';
 
-        $records = $this->client->run(implode(' ', $query), [
+        $records = app('neo4j')->run(implode(' ', $query), [
             'search' => $search,
             'limit' => intval($limit),
         ])->getRecords();
@@ -106,7 +106,7 @@ class CompanyController extends BaseController
             'MATCH (:Company{ uuid: {uuid} })<-[:BELONG_TO*]-(d:Department)',
             'RETURN DISTINCT d',
         ];
-        $records = $this->client->run(implode(' ', $query), [
+        $records = app('neo4j')->run(implode(' ', $query), [
             'uuid' => $uuid,
         ])->getRecords();
         $uuids = [];
@@ -122,7 +122,7 @@ class CompanyController extends BaseController
             'WHERE d.uuid IN [' . implode(', ', $uuids) . ']',
             'RETURN u',
         ];
-        $records = $this->client->run(implode(' ', $query))->getRecords();
+        $records = app('neo4j')->run(implode(' ', $query))->getRecords();
         $result = [];
         foreach ($records as $record) {
             $node = $record->get('u');

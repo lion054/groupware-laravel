@@ -18,6 +18,8 @@ $router->get('/', function () use ($router) {
 $router->post('media', 'MediaController@store');
 $router->get('media/{key}', 'MediaController@show');
 
+$router->get('auth/verify', 'AuthController@verify');
+
 $router->group([
     'middleware' => [
         // 'throttle:10,1', // The user can call auth APIs up to 10 times in every a minute
@@ -40,8 +42,6 @@ $router->group([
 $router->group([
     'middleware' => 'token.validate'
 ], function () use ($router) {
-    $router->get('auth/verify', 'AuthController@verify');
-
     $router->get('companies', 'CompanyController@index');
     $router->get('companies/{uuid}', 'CompanyController@show');
     $router->post('companies', 'CompanyController@store');

@@ -20,7 +20,7 @@ class DepartmentController extends BaseController
         if (!empty($limit))
             $query[] = 'LIMIT {limit}';
 
-        $records = $this->client->run(implode(' ', $query), [
+        $records = app('neo4j')->run(implode(' ', $query), [
             'search' => $search,
             'limit' => intval($limit),
         ])->getRecords();
@@ -103,7 +103,7 @@ class DepartmentController extends BaseController
             'MATCH (d:Department{ uuid: {uuid} })<-[r:WORK_AT]-(u:User)',
             'RETURN u',
         ];
-        $records = $this->client->run(implode(' ', $query), [
+        $records = app('neo4j')->run(implode(' ', $query), [
             'uuid' => $uuid,
         ])->getRecords();
         $result = [];
