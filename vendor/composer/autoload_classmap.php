@@ -19,7 +19,6 @@ return array(
     'App\\Http\\Controllers\\UserController' => $baseDir . '/app/Http/Controllers/UserController.php',
     'App\\Http\\Controllers\\WorkAtController' => $baseDir . '/app/Http/Controllers/WorkAtController.php',
     'App\\Http\\Middleware\\GenerateToken' => $baseDir . '/app/Http/Middleware/GenerateToken.php',
-    'App\\Http\\Middleware\\RefreshToken' => $baseDir . '/app/Http/Middleware/RefreshToken.php',
     'App\\Http\\Middleware\\ValidateToken' => $baseDir . '/app/Http/Middleware/ValidateToken.php',
     'App\\Jobs\\ExampleJob' => $baseDir . '/app/Jobs/ExampleJob.php',
     'App\\Jobs\\Job' => $baseDir . '/app/Jobs/Job.php',

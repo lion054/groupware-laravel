@@ -45,4 +45,9 @@ class AuthController extends BaseController
     {
         return $request->user();
     }
+
+    public function refresh(Request $request)
+    {
+        return []; // token will be filled by "token.generate"
+    }
 }

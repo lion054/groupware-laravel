@@ -568,7 +568,6 @@ class ComposerStaticInit262ad36aab857d9c2f0a1bc74e64a644
         'App\\Http\\Controllers\\UserController' => __DIR__ . '/../..' . '/app/Http/Controllers/UserController.php',
         'App\\Http\\Controllers\\WorkAtController' => __DIR__ . '/../..' . '/app/Http/Controllers/WorkAtController.php',
         'App\\Http\\Middleware\\GenerateToken' => __DIR__ . '/../..' . '/app/Http/Middleware/GenerateToken.php',
-        'App\\Http\\Middleware\\RefreshToken' => __DIR__ . '/../..' . '/app/Http/Middleware/RefreshToken.php',
         'App\\Http\\Middleware\\ValidateToken' => __DIR__ . '/../..' . '/app/Http/Middleware/ValidateToken.php',
         'App\\Jobs\\ExampleJob' => __DIR__ . '/../..' . '/app/Jobs/ExampleJob.php',
         'App\\Jobs\\Job' => __DIR__ . '/../..' . '/app/Jobs/Job.php',

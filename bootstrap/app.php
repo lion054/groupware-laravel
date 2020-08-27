@@ -70,7 +70,6 @@ $app->middleware([
 $app->routeMiddleware([
     'token.generate' => App\Http\Middleware\GenerateToken::class,
     'token.validate' => App\Http\Middleware\ValidateToken::class,
-    'token.refresh' => App\Http\Middleware\RefreshToken::class,
 ]);
 
 /*
@@ -84,7 +83,6 @@ $app->routeMiddleware([
 |
 */
 
-$app->register(App\Providers\AppServiceProvider::class);
 $app->register(Intervention\Image\ImageServiceProvider::class);
 $app->register(Nord\Lumen\Cors\CorsServiceProvider::class);
 

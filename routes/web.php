@@ -28,6 +28,16 @@ $router->group([
 });
 
 $router->group([
+    'middleware' => [
+        // 'throttle:10,1', // The user can call auth APIs up to 10 times in every a minute
+        'token.validate',
+        'token.generate',
+    ]
+], function () use ($router) {
+    $router->get('auth/refresh', 'AuthController@refresh');
+});
+
+$router->group([
     'middleware' => 'token.validate'
 ], function () use ($router) {
     $router->get('auth/verify', 'AuthController@verify');
