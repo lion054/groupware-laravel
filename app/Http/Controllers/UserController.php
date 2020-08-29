@@ -11,26 +11,24 @@ class UserController extends BaseController
     {
         $company_uuid = $request->query('company_uuid');
         $department_uuid = $request->query('department_uuid');
-        $job_visible = $request->boolean('job_visible');
+        $career_visible = $request->boolean('career_visible');
         $search = $request->query('search');
         $sort_by = $request->query('sort_by');
         $limit = $request->query('limit');
 
-        $query = [];
-        $conditions = [];
-        if ($job_visible) {
-            $query[] = 'MATCH p=(u:User)-[r:WORK_AT]->(:Department)-[:BELONG_TO*]->(n)';
-            $conditions = [
-                'NOT EXISTS (r.left_at)',
-                'NOT (n)-[:BELONG_TO]->()', // "n" must be top-level
-            ];
-        } else
-            $query[] = 'MATCH p=(u:User)';
+        $query = ['MATCH (u:User)'];
         if (!empty($search))
-            $conditions[] = 'u.name CONTAINS {search}';
-        if (!empty($conditions))
-            $query[] = 'WHERE ' . implode(' AND ', $conditions);
-        $query[] = 'RETURN NODES(p)'; // "p" means path
+            $query[] = 'WHERE u.name CONTAINS {search}';
+        if ($career_visible) {
+            $query[] = 'OPTIONAL MATCH (u)-[w:WORK_AT]->(d:Department)';
+            $query[] = 'WITH u, w.role AS role, d';
+            $query[] = 'OPTIONAL MATCH p=(d)-[:BELONG_TO*]->(c:Company)';
+            $query[] = 'WHERE NOT (c)-[:BELONG_TO]->()'; // "n" must be top-level
+        }
+        $fields = ['u'];
+        if ($career_visible)
+            $fields[] = 'COLLECT({ role: role, hierarchy: NODES(p) }) AS career'; // "p" means path
+        $query[] = 'RETURN ' . implode(', ', $fields);
         if (!empty($limit))
             $query[] = 'LIMIT {limit}';
 
@@ -41,36 +39,40 @@ class UserController extends BaseController
         $result = [];
 
         foreach ($records as $record) {
-            $nodes = $record->get('NODES(p)');
-            $user = [];
-            $department = [];
-            $company = [];
-            foreach ($nodes as $node) {
-                $labels = $node->labels();
-                $values = $node->values();
-                if (in_array('User', $labels)) {
-                    if (isset($values['password']))
-                        unset($values['password']);
-                    $user = $values;
-                } else if (in_array('Department', $labels)) {
-                    if (empty($department))
-                        $department = $values;
-                    else {
-                        $values['child'] = $department;
-                        $department = $values;
+            $user = $record->get('u')->values();
+            if (isset($user['password']))
+                unset($user['password']);
+            if ($record->hasValue('career')) {
+                $user['career'] = [];
+                foreach ($record->get('career') as $item) {
+                    if (!$item['hierarchy'])
+                        continue;
+                    $department = [];
+                    $company = [];
+                    foreach ($item['hierarchy'] as $node) {
+                        $values = $node->values();
+                        if ($node->hasLabel('Department')) {
+                            if (empty($department))
+                                $department = $values;
+                            else {
+                                $values['department'] = $department;
+                                $department = $values;
+                            }
+                        } else if ($node->hasLabel('Company')) {
+                            if (empty($company))
+                                $company = $values;
+                            else {
+                                $values['company'] = $company;
+                                $company = $values;
+                            }
+                        }
                     }
-                } else if (in_array('Company', $labels)) {
-                    if (empty($company))
-                        $company = $values;
-                    else {
-                        $values['child'] = $company;
-                        $company = $values;
-                    }
+                    $user['career'][] = [
+                        'role' => $item['role'],
+                        'department' => $department,
+                        'company' => $company,
+                    ];
                 }
-            }
-            if ($job_visible) {
-                $user['department'] = $department;
-                $user['company'] = $company;
             }
             $result[] = $user;
         }
