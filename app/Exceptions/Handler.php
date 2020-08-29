@@ -18,8 +18,10 @@ class Handler extends ExceptionHandler
      */
     protected $dontReport = [
         AuthorizationException::class,
+        FileIOException::class,
         HttpException::class,
         ModelNotFoundException::class,
+        NotSupportedException::class,
         ValidationException::class,
     ];
 
@@ -49,6 +51,16 @@ class Handler extends ExceptionHandler
             return [
                 'success' => false,
                 'errors' => $exception->errors(),
+            ];
+        } else if ($exception instanceof NotSupportedException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ];
+        } else if ($exception instanceof FileIOException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
             ];
         }
         return parent::render($request, $exception);

@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Intervention\Image\Facades\Image;
-use Illuminate\Support\Facades\Response;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 class MediaController extends BaseController
 {
+    public function __construct()
+    {
+        ini_set('memory_limit', '-1'); // Allow to process big image
+    }
+
     public function store(Request $request)
     {
         $this->validate($request, [
@@ -33,8 +37,6 @@ class MediaController extends BaseController
 
         $path = base64_decode($key);
         $filePath = storage_path("app/$path");
-        $type = exif_imagetype($filePath);
-        $mimeType = image_type_to_mime_type($type);
 
         // Perform the image scaling
         $width = $request->query('width');
@@ -44,16 +46,12 @@ class MediaController extends BaseController
         else
             $width = intval($width);
 
-        list($originalWidth, $originalHeight) = getimagesize($filePath);
-        $thumbWidth = $width;
-        if (empty($height)) {
-            $ratio = $width / $originalWidth;
-            $thumbHeight = ceil($originalHeight * $ratio);
-        } else {
-            $thumbHeight = $height;
-        }
+        // get mime type of file
+        $mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $filePath);
 
-        $img = Image::make($filePath)->resize($thumbWidth, $thumbHeight);
-        return Response::make($img->encode('jpg'))->header('Content-Type', 'image/jpeg');
+        $content = $this->getResizedImageContent($filePath, $mime, $width, $height);
+        return Response::create($content, 200, [
+            'Content-Type' => 'image/jpeg',
+        ]);
     }
 }
