@@ -71,7 +71,7 @@ class UserSeeder extends BaseSeeder
                 ]);
                 do {
                     $avatar = $this->downloadImage('https://thispersondoesnotexist.com/image', $this->faceContext, 'users', $user->uuid, false);
-                } while ($avatar === FALSE);
+                } while ($avatar === false);
                 $this->updateNode($user->uuid, [
                     'avatar' => $avatar,
                 ]);

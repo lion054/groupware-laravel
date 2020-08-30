@@ -38,7 +38,7 @@ class BelongToController extends BaseController
         foreach ($nodes as $node) {
             if ($node['values']['uuid'] == $department_uuid) {
                 return [
-                    'success' => FALSE,
+                    'success' => false,
                     'error' => 'Recursive relation among graph is not allowed',
                 ];
             }

@@ -37,7 +37,7 @@ class DepartmentController extends BaseController
         $node = $this->getNode($uuid);
         if (!$node) {
             return [
-                'success' => FALSE,
+                'success' => false,
                 'error' => 'Not found that node',
             ];
         }

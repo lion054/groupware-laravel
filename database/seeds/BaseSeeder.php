@@ -27,8 +27,8 @@ class BaseSeeder extends Seeder
 
         $this->imageContext = stream_context_create([
             'ssl' => [
-                'verify_peer' => FALSE,
-                'verify_peer_name' => FALSE,
+                'verify_peer' => false,
+                'verify_peer_name' => false,
             ]
         ]);
 
@@ -142,7 +142,7 @@ class BaseSeeder extends Seeder
         return $path;
     }
 
-    protected function checkUnique($label, $field, $value, $excludingUuid = FALSE)
+    protected function checkUnique($label, $field, $value, $excludingUuid = false)
     {
         $query = ["MATCH (n:$label{ $field: {value} })"];
         if ($excludingUuid)

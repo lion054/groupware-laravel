@@ -23,14 +23,14 @@ class AuthController extends BaseController
         ]);
         if (!$node) {
             return [
-                'success' => FALSE,
+                'success' => false,
                 'error' => 'Unregistered email',
             ];
         }
         $user = $node->values();
         if (isset($user['deleted_at'])) {
             return [
-                'success' => FALSE,
+                'success' => false,
                 'error' => 'This account was deleted',
             ];
         }
