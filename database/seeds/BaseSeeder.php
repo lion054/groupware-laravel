@@ -11,12 +11,7 @@ class BaseSeeder extends Seeder
     /**
      * @var HTTP download context for general image
      */
-    private $imageContext;
-
-    /**
-     * @var HTTP download context for face image
-     */
-    private $faceContext;
+    protected $imageContext;
 
     /**
      * @var Neo4j PHP Client
@@ -37,24 +32,6 @@ class BaseSeeder extends Seeder
             ]
         ]);
 
-        $headers = [
-            'authority: thispersondoesnotexist.com',
-            'pragma: no-cache',
-            'cache-control: no-cache',
-            'upgrade-insecure-requests: 1',
-            'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
-            'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-            'referer: https://thispersondoesnotexist.com/',
-            'accept-encoding: gzip, deflate, br',
-            'accept-language: en-US,en;q=0.9',
-        ];
-        $this->faceContext = stream_context_create([
-            'http' => [
-                'method' => 'GET',
-                'header' => implode("\r\n ", $headers) . "\r\n",
-            ]
-        ]);
-
         $host = config('database.connections.neo4j.host');
         $port = config('database.connections.neo4j.port');
         $username = config('database.connections.neo4j.username');
@@ -65,55 +42,102 @@ class BaseSeeder extends Seeder
             ->build();
     }
 
-    protected function downloadImage($url, $module, $id, $subdir)
+    protected function downloadImage($url, $context, $module, $id, $subdir)
     {
         try {
-            $contents = file_get_contents($url, FALSE, $this->imageContext);
+            $contents = file_get_contents($url, false, $context);
         } catch (Exception $e) {
-            return FALSE;
+            return false;
         }
+
+        $core = imagecreatefromstring($contents);
+        $originalWidth = imagesx($core);
+        $originalHeight = imagesy($core);
+
+        // get the content type
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 
         if (empty($subdir))
             $path = "$module/$id";
         else
             $path = "$module/$id/$subdir";
         Storage::disk('local')->makeDirectory($path);
-        $path .= '/' . uniqid() . '.jpg';
 
-        $image = Image::make($contents);
-        if ($image->width() > 600) {
-            $image->resize(600, null, function ($constraint) {
-                $constraint->aspectRatio();
-            });
+        if ($originalWidth > 600) {
+            $newWidth = 600;
+            $ratio = $newWidth / $originalWidth;
+            $newHeight = ceil($originalHeight * $ratio);
+
+            $canvas = imagecreatetruecolor($newWidth, $newHeight);
+            imagecopyresized($canvas, $core, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
         }
-        $image->save(storage_path("app/$path"), 100);
+        imagedestroy($core);
 
-        return $path;
-    }
+        // define core
+        switch (strtolower($contentType)) {
+            case 'image/png':
+            case 'image/x-png':
+                $path .= '/' . uniqid() . '.png';
+                if ($originalWidth > 600) {
+                    $result = @imagepng($canvas, storage_path("app/$path"));
+                    imagedestroy($canvas);
+                } else {
+                    $result = Storage::disk('local')->put($path, $contents);
+                }
+                break;
 
-    protected function downloadFace($url, $id)
-    {
-        try {
-            $contents = file_get_contents($url, FALSE, $this->faceContext);
-        } catch (Exception $e) {
-            return FALSE;
+            case 'image/jpg':
+            case 'image/jpeg':
+            case 'image/pjpeg':
+                $path .= '/' . uniqid() . '.jpg';
+                if ($originalWidth > 600) {
+                    $result = @imagejpeg($canvas, storage_path("app/$path"));
+                    imagedestroy($canvas);
+                } else {
+                    $result = Storage::disk('local')->put($path, $contents);
+                }
+                break;
+
+            case 'image/gif':
+                $path .= '/' . uniqid() . '.gif';
+                if ($originalWidth > 600) {
+                    $result = @imagegif($canvas, storage_path("app/$path"));
+                    imagedestroy($canvas);
+                } else {
+                    $result = Storage::disk('local')->put($path, $contents);
+                }
+                break;
+
+            case 'image/webp':
+            case 'image/x-webp':
+                if (!function_exists('imagewebp')) {
+                    throw new NotSupportedException(
+                        "Unsupported image type. GD/PHP installation does not support WebP format."
+                    );
+                }
+                $path .= '/' . uniqid() . '.webp';
+                if ($originalWidth > 600) {
+                    $result = @imagewebp($canvas, storage_path("app/$path"));
+                    imagedestroy($canvas);
+                } else {
+                    $result = Storage::disk('local')->put($path, $contents);
+                }
+                break;
+
+            default:
+                throw new NotSupportedException(
+                    "Unsupported image type. GD driver is only able to decode JPG, PNG, GIF or WebP files."
+                );
         }
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_exec($ch);
-
-        $path = "users/$id";
-        Storage::disk('local')->makeDirectory($path);
-        $path .= '/' . uniqid() . '.jpg';
-
-        $image = Image::make($contents);
-        if ($image->width() > 600) {
-            $image->resize(600, null, function ($constraint) {
-                $constraint->aspectRatio();
-            });
+        if (empty($result)) {
+            throw new FileIOException(
+                "Unable to write image into file ({$filePath})."
+            );
         }
-        $image->save(storage_path("app/$path"), 100);
 
         return $path;
     }

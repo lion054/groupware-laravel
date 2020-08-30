@@ -6,6 +6,37 @@ use Illuminate\Support\Facades\Storage;
 class UserSeeder extends BaseSeeder
 {
     /**
+     * @var HTTP download context for face image
+     */
+    private $faceContext;
+
+    /**
+     * Initialize the context
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        $headers = [
+            'authority: thispersondoesnotexist.com',
+            'pragma: no-cache',
+            'cache-control: no-cache',
+            'upgrade-insecure-requests: 1',
+            'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36',
+            'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+            'referer: https://thispersondoesnotexist.com/',
+            'accept-encoding: gzip, deflate, br',
+            'accept-language: en-US,en;q=0.9',
+        ];
+        $this->faceContext = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => implode("\r\n ", $headers) . "\r\n",
+            ]
+        ]);
+    }
+
+    /**
      * Run the database seeds.
      *
      * @return void
@@ -39,7 +70,7 @@ class UserSeeder extends BaseSeeder
                     'password' => Hash::make('123456'),
                 ]);
                 do {
-                    $avatar = $this->downloadFace('https://thispersondoesnotexist.com/image', $user->uuid);
+                    $avatar = $this->downloadImage('https://thispersondoesnotexist.com/image', $this->faceContext, 'users', $user->uuid, false);
                 } while ($avatar === FALSE);
                 $this->updateNode($user->uuid, [
                     'avatar' => $avatar,
