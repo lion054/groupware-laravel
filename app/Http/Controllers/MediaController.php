@@ -51,7 +51,7 @@ class MediaController extends BaseController
 
         $content = $this->getResizedImageContent($filePath, $mime, $width, $height);
         return Response::create($content, 200, [
-            'Content-Type' => 'image/jpeg',
+            'Content-Type' => $mime,
         ]);
     }
 }
