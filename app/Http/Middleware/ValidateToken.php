@@ -10,37 +10,27 @@ use Lcobucci\JWT\ValidationData;
 
 use Closure;
 
-class ValidateToken
+use App\Exceptions\InvalidTokenDataException;
+use App\Exceptions\TokenExpiredException;
+use App\Exceptions\TokenNotFoundException;
+use App\Exceptions\TokenNotVerifiedException;
+use App\Exceptions\UserNotFoundException;
+
+abstract class ValidateToken
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @param  string|null  $guard
-     * @return mixed
-     */
-    public function handle($request, Closure $next, $guard = null)
+    protected function getTokenCategory($request)
     {
         $value = $request->bearerToken();
-        if (empty($value)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Token not found',
-            ], 401);
-        }
+        if (empty($value))
+            throw new TokenNotFoundException();
 
         $parser = new Parser();
         $token = $parser->parse($value);
 
         $signer = new Sha256();
         $secret = config('jwt.secret');
-        if (!$token->verify($signer, $secret)) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Token not verified',
-            ], 401);
-        }
+        if (!$token->verify($signer, $secret))
+            throw new TokenNotVerifiedException();
 
         $leeway = config('jwt.leeway');
         $data = new ValidationData(null, $leeway);
@@ -51,17 +41,10 @@ class ValidateToken
         foreach ($claims as $claim) {
             if ($claim->validate($data))
                 continue;
-            if ($claim->getName() == 'exp') {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Token expired',
-                ], 401);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Invalid token data',
-                ], 401);
-            }
+            if ($claim->getName() == 'exp')
+                throw new TokenExpiredException();
+            else
+                throw new InvalidTokenDataException();
         }
 
         $query = [
@@ -72,12 +55,8 @@ class ValidateToken
             'uuid' => $token->getClaim('sub'),
         ]);
 
-        if ($result->size() == 0) {
-            return response()->json([
-                'success' => false,
-                'error' => 'User not found',
-            ], 404);
-        }
+        if ($result->size() == 0)
+            throw new UserNotFoundException();
 
         $user = $result->getRecord()->get('u')->values();
         if (isset($user['password']))
@@ -86,7 +65,7 @@ class ValidateToken
             return $user;
         });
 
-        return $next($request);
+        return $token->getClaim('cat');
     }
 
     private function getValidatableClaims(Token $token)

@@ -20,8 +20,14 @@ class Handler extends ExceptionHandler
         AuthorizationException::class,
         FileIOException::class,
         HttpException::class,
+        InvalidTokenCategoryException::class,
+        InvalidTokenDataException::class,
         ModelNotFoundException::class,
         NotSupportedException::class,
+        TokenExpiredException::class,
+        TokenNotFoundException::class,
+        TokenNotVerifiedException::class,
+        UserNotFoundException::class,
         ValidationException::class,
     ];
 
@@ -58,6 +64,36 @@ class Handler extends ExceptionHandler
                 'error' => $exception->getMessage(),
             ];
         } else if ($exception instanceof FileIOException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ];
+        } else if ($exception instanceof InvalidTokenCategoryException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ];
+        } else if ($exception instanceof InvalidTokenDataException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ];
+        } else if ($exception instanceof TokenExpiredException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ];
+        } else if ($exception instanceof TokenNotFoundException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ];
+        } else if ($exception instanceof TokenNotVerifiedException) {
+            return [
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ];
+        } else if ($exception instanceof UserNotFoundException) {
             return [
                 'success' => false,
                 'error' => $exception->getMessage(),
