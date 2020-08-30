@@ -6,9 +6,6 @@ use Laravel\Lumen\Routing\Controller;
 use Lcobucci\JWT\Parser;
 use Ramsey\Uuid\Uuid;
 
-use App\Exceptions\FileIOException;
-use App\Exceptions\NotSupportedException;
-
 abstract class BaseController extends Controller
 {
     protected function getCurrentUser($request)
@@ -362,97 +359,5 @@ abstract class BaseController extends Controller
         app('neo4j')->run(implode(' ', $query), [
             'uuid' => $uuid,
         ]);
-    }
-
-    protected function getResizedImageContent($filePath, $mime, $width, $height)
-    {
-        list($originalWidth, $originalHeight) = getimagesize($filePath);
-        if (empty($height)) {
-            $ratio = $width / $originalWidth;
-            $height = ceil($originalHeight * $ratio);
-        }
-
-        // define core
-        switch (strtolower($mime)) {
-            case 'image/png':
-            case 'image/x-png':
-                $core = @imagecreatefrompng($filePath);
-                break;
-
-            case 'image/jpg':
-            case 'image/jpeg':
-            case 'image/pjpeg':
-                $core = @imagecreatefromjpeg($filePath);
-                if (!$core) {
-                    $core= @imagecreatefromstring(file_get_contents($filePath));
-                }
-                break;
-
-            case 'image/gif':
-                $core = @imagecreatefromgif($filePath);
-                break;
-
-            case 'image/webp':
-            case 'image/x-webp':
-                if (!function_exists('imagecreatefromwebp')) {
-                    throw new NotSupportedException(
-                        "Unsupported image type. GD/PHP installation does not support WebP format."
-                    );
-                }
-                $core = @imagecreatefromwebp($filePath);
-                break;
-
-            default:
-                throw new NotSupportedException(
-                    "Unsupported image type. GD driver is only able to decode JPG, PNG, GIF or WebP files."
-                );
-        }
-
-        if (empty($core)) {
-            throw new FileIOException(
-                "Unable to decode image from file ({$filePath})."
-            );
-        }
-
-        // new canvas
-        $canvas = imagecreatetruecolor($width, $height);
-
-        // fill with transparent color
-        imagealphablending($canvas, false);
-        $transparent = imagecolorallocatealpha($canvas, 255, 255, 255, 127);
-        imagefilledrectangle($canvas, 0, 0, $width, $height, $transparent);
-        imagecolortransparent($canvas, $transparent);
-        imagealphablending($canvas, true);
-
-        // copy original
-        imagecopyresampled($canvas, $core, 0, 0, 0, 0, $width, $height, $originalWidth, $originalHeight);
-        imagedestroy($core);
-
-        ob_start();
-        switch (strtolower($mime)) {
-            case 'image/png':
-            case 'image/x-png':
-                @imagepng($canvas);
-                break;
-
-            case 'image/jpg':
-            case 'image/jpeg':
-            case 'image/pjpeg':
-                @imagejpeg($canvas);
-                break;
-
-            case 'image/gif':
-                @imagegif($canvas);
-                break;
-
-            case 'image/webp':
-            case 'image/x-webp':
-                @imagewebp($canvas);
-                break;
-        }
-        imagedestroy($canvas);
-        $buffer = ob_get_contents();
-        ob_end_clean();
-        return $buffer;
     }
 }
