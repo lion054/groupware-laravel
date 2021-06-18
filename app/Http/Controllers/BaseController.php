@@ -70,11 +70,11 @@ abstract class BaseController extends Controller
     {
         $query = ["MATCH (n:$label{ $field: {value} })"];
         if ($excludingUuid)
-            $query[] = 'WHERE n.uuid <> {uuid}';
+            $query[] = 'WHERE n.uuid <> {excludingUuid}';
         $query[] = 'RETURN COUNT(*)';
         $result = app('neo4j')->run(implode(' ', $query), [
             'value' => $value,
-            'uuid' => $excludingUuid,
+            'excludingUuid' => $excludingUuid,
         ]);
         return $result->size() == 0;
     }

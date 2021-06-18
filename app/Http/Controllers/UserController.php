@@ -99,7 +99,7 @@ class UserController extends BaseController
         $this->validate($request, [
             'name' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:6',
+            'password' => 'required|confirmed|min:6',
         ], [], function ($validator) use ($request) {
             if (!$validator->errors()->has('email')) {
                 if (!$this->checkUnique('User', 'email', $request->input('email')))
@@ -107,7 +107,7 @@ class UserController extends BaseController
             }
         });
 
-        $data = $request->only(['name', 'email', 'password']);
+        $data = $request->only(['name', 'email', 'password']); // don't save password_confirmation in record
         $data['password'] = Hash::make($data['password']);
         $node = $this->createNode('User', $data);
         return $node->values();
@@ -117,7 +117,7 @@ class UserController extends BaseController
     {
         $this->validate($request, [
             'email' => 'email',
-            'password' => 'min:6',
+            'password' => 'confirmed|min:6',
         ], [], function ($validator) use ($request, $uuid) {
             if (!$validator->errors()->has('email')) {
                 if (!$this->checkUnique('User', 'email', $request->input('email'), $uuid))
@@ -125,11 +125,13 @@ class UserController extends BaseController
             }
         });
 
-        $data = $request->only(['name', 'email', 'password']);
+        $data = $request->only(['name', 'email', 'password']); // don't save password_confirmation in record
         if (empty($data))
             $node = $this->getNode($uuid);
-        else
+        else {
+            $data['password'] = Hash::make($data['password']);
             $node = $this->updaetNode($uuid, $data);
+        }
         $data = $node->values();
         if (isset($data['password']))
             unset($data['password']);
